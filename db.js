@@ -6,9 +6,11 @@
 const { DatabaseSync } = require('node:sqlite');
 const path   = require('path');
 const crypto = require('crypto');
+const fs     = require('fs');
 
 // On Railway, set DATA_DIR env var to the mounted volume path (e.g. /data)
 const DATA_DIR = process.env.DATA_DIR || __dirname;
+fs.mkdirSync(DATA_DIR, { recursive: true });
 const db = new DatabaseSync(path.join(DATA_DIR, 'vboard.db'));
 
 function uid() { return crypto.randomBytes(6).toString('hex'); }
