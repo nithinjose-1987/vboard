@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>V Board – Vadakkekkara Group</title>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      background: #0C1220;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #E2E8F0;
+      min-height: 100vh;
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #1A2535; }
+    ::-webkit-scrollbar-thumb { background: #3A4F6A; border-radius: 3px; }
+
+    /* ── Glassmorphism Cards ── */
+    .card {
+      background: rgba(22, 35, 55, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      border-radius: 18px;
+      backdrop-filter: blur(12px);
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeIn 0.3s ease forwards; }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(99,102,241,0.4); }
+      50%       { box-shadow: 0 0 0 8px rgba(99,102,241,0); }
+    }
+
+    /* ── Modal overlay ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(5, 10, 20, 0.75);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 500;
+      backdrop-filter: blur(6px);
+    }
+    .modal {
+      background: #162033;
+      border: 1px solid rgba(148,163,184,0.18);
+      border-radius: 22px;
+      padding: 32px;
+      width: 92%;
+      max-width: 520px;
+      max-height: 92vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    .modal-wide { max-width: 640px; }
+
+    /* ── Forms ── */
+    .f-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #8FA4BE;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 6px;
+    }
+    .f-input {
+      width: 100%;
+      background: #0C1220;
+      border: 1px solid #243652;
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: #E2E8F0;
+      font-size: 14px;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+    .f-input:focus { outline: none; border-color: #6366F1; }
+    .f-input::placeholder { color: #3D5475; }
+    select.f-input option { background: #162033; color: #E2E8F0; }
+
+    /* ── Buttons ── */
+    .btn {
+      cursor: pointer; border: none; border-radius: 10px;
+      font-family: inherit; font-weight: 600;
+      transition: all 0.18s; display: inline-flex;
+      align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
+      color: #fff; padding: 10px 20px; font-size: 14px;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,0.4); }
+    .btn-ghost {
+      background: transparent; color: #8FA4BE;
+      border: 1px solid #243652; padding: 10px 20px; font-size: 14px;
+    }
+    .btn-ghost:hover { border-color: #6366F1; color: #E2E8F0; }
+    .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 8px; }
+    .btn-danger {
+      background: transparent; color: #F87171;
+      border: 1px solid #F87171; padding: 5px 12px; font-size: 12px;
+      border-radius: 8px; cursor: pointer; font-family: inherit;
+      transition: background 0.15s;
+    }
+    .btn-danger:hover { background: rgba(248,113,113,0.12); }
+    .btn-icon {
+      background: transparent; color: #8FA4BE;
+      border: 1px solid #243652; padding: 5px 10px; font-size: 13px;
+      border-radius: 8px; cursor: pointer; font-family: inherit;
+      transition: all 0.15s;
+    }
+    .btn-icon:hover { border-color: #6366F1; color: #E2E8F0; }
+
+    /* ── Calendar day hover ── */
+    .cal-day {
+      border-radius: 9px;
+      padding: 5px 3px;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.15s;
+      position: relative;
+    }
+    .cal-day:hover { background: rgba(99,102,241,0.18); }
+
+    /* ── Leaderboard row hover ── */
+    .lb-row { transition: background 0.15s; }
+    .lb-row:hover { background: rgba(99,102,241,0.06) !important; }
+
+    /* ── Tab button ── */
+    .tab-btn {
+      padding: 8px 15px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.18s;
+      white-space: nowrap;
+      display: flex; align-items: center; gap: 6px;
+      color: #8FA4BE;
+    }
+    .tab-btn:hover { color: #C7D5E8; background: rgba(148,163,184,0.07); }
+    .tab-btn.active {
+      font-weight: 700;
+      background: rgba(99,102,241,0.18);
+    }
+
+    /* ── Scrollable tab row ── */
+    .tab-row {
+      display: flex; gap: 6px;
+      overflow-x: auto; padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .tab-row::-webkit-scrollbar { display: none; }
+
+    /* ── Admin sidebar item ── */
+    .sb-item {
+      padding: 12px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.18s;
+      display: flex; align-items: center; gap: 10px;
+      border: 1px solid transparent;
+    }
+    .sb-item:hover { background: rgba(148,163,184,0.05); }
+    .sb-item.active { background: rgba(22,35,55,0.9); border: 1px solid rgba(148,163,184,0.12); }
+
+    /* ── Divider ── */
+    .divider { height: 1px; background: rgba(148,163,184,0.08); width: 100%; }
+
+    /* ── Badge ── */
+    .badge {
+      font-size: 11px; font-weight: 700; padding: 3px 9px;
+      border-radius: 20px;
+    }
+
+    /* ── Tooltip ── */
+    [title] { cursor: help; }
+
+    /* ── Color swatch ── */
+    .swatch {
+      width: 30px; height: 30px; border-radius: 8px;
+      cursor: pointer; transition: transform 0.12s;
+      border: 3px solid transparent;
+      flex-shrink: 0;
+    }
+    .swatch:hover { transform: scale(1.1); }
+    .swatch.selected { border-color: white; transform: scale(1.15); }
+
+    /* ── Emoji picker tile ── */
+    .em-tile {
+      width: 38px; height: 38px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 19px; cursor: pointer; transition: all 0.12s;
+      background: rgba(12,18,32,0.7);
+      border: 1px solid #243652;
+    }
+    .em-tile:hover { background: rgba(99,102,241,0.18); }
+    .em-tile.selected { background: rgba(99,102,241,0.3); border-color: #6366F1; }
+
+    /* ── Section header ── */
+    .section-label {
+      font-size: 10px; font-weight: 800; letter-spacing: 1.2px;
+      text-transform: uppercase; color: #4A6A8A; margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// ═══════════════════════════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════════════════════════
+
+const ADMIN_PASS = "VG@2026";
+
+const MONTH_NAMES = [
+  "January","February","March","April","May","June",
+  "July","August","September","October","November","December"
+];
+const DAY_ABBR = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+
+const TIMEZONES = [
+  "Asia/Kolkata","Asia/Dubai","Asia/Singapore","Asia/Tokyo","Asia/Shanghai",
+  "Asia/Colombo","Asia/Bangkok","Australia/Sydney",
+  "Europe/London","Europe/Paris","Europe/Berlin",
+  "America/New_York","America/Chicago","America/Los_Angeles","America/Toronto",
+  "Pacific/Auckland"
+];
+
+const COLOR_OPTS = [
+  { name:"Ember",   hex:"#F97316" },
+  { name:"Jade",    hex:"#22C55E" },
+  { name:"Ocean",   hex:"#3B82F6" },
+  { name:"Violet",  hex:"#A855F7" },
+  { name:"Gold",    hex:"#F59E0B" },
+  { name:"Rose",    hex:"#EC4899" },
+  { name:"Teal",    hex:"#14B8A6" },
+  { name:"Crimson", hex:"#EF4444" },
+  { name:"Indigo",  hex:"#6366F1" },
+  { name:"Cyan",    hex:"#06B6D4" },
+];
+
+const EMOJIS = [
+  "🏎️","🚶","🚣","🎲","🗳️","🏆","⚽","🎯",
+  "🎮","🏋️","🤺","🎳","🃏","♟️","🎪","🎭",
+  "🏇","🤸","🎾","🏸","🥊","🎱","🎰","🧩"
+];
+
+// ═══════════════════════════════════════════════════════════
+//  SEED DATA
+// ═══════════════════════════════════════════════════════════
+
+const SEED_BOARDS = [
+  {
+    id:"aaanyottam", name:"Aaanyottam", subtitle:"E Race",
+    emoji:"🏎️", color:"#F97316", unit:"pts",
+    participants:[
+      { id:"a1", name:"Rajesh Kumar",   score:4250 },
+      { id:"a2", name:"Anil Menon",     score:3890 },
+      { id:"a3", name:"Suresh Nair",    score:3650 },
+      { id:"a4", name:"Pradeep Varma",  score:3420 },
+      { id:"a5", name:"Vijayan P",      score:3200 },
+      { id:"a6", name:"Mohan Das",      score:2980 },
+      { id:"a7", name:"Rajan T",        score:2750 },
+      { id:"a8", name:"Sreejith K",     score:2500 },
+    ]
+  },
+  {
+    id:"poorathon", name:"Poorathon", subtitle:"Walk it",
+    emoji:"🚶", color:"#22C55E", unit:"km",
+    participants:[
+      { id:"b1", name:"Meera Nambiar",  score:287 },
+      { id:"b2", name:"Lakshmi T",      score:265 },
+      { id:"b3", name:"Deepa Raj",      score:243 },
+      { id:"b4", name:"Anitha V",       score:218 },
+      { id:"b5", name:"Suma K",         score:195 },
+      { id:"b6", name:"Priya M",        score:180 },
+      { id:"b7", name:"Rekha S",        score:162 },
+    ]
+  },
+  {
+    id:"vallamkalim", name:"VallamKalim", subtitle:"B Race",
+    emoji:"🚣", color:"#3B82F6", unit:"pts",
+    participants:[
+      { id:"c1", name:"Team Kuttanadu",     score:850 },
+      { id:"c2", name:"Team Alappuzha",     score:820 },
+      { id:"c3", name:"Team Kumarakom",     score:790 },
+      { id:"c4", name:"Team Champakulam",   score:760 },
+      { id:"c5", name:"Team Punnamada",     score:730 },
+      { id:"c6", name:"Team Vembanad",      score:700 },
+    ]
+  },
+  {
+    id:"vey-raja", name:"Vey Raja", subtitle:"Gamble Away",
+    emoji:"🎲", color:"#A855F7", unit:"pts",
+    participants:[
+      { id:"d1", name:"Biju Thomas",    score:12500 },
+      { id:"d2", name:"Saji George",    score:11200 },
+      { id:"d3", name:"Tomy Varghese",  score:10800 },
+      { id:"d4", name:"Jose Mathew",    score:9600  },
+      { id:"d5", name:"Philip K",       score:8900  },
+      { id:"d6", name:"Alex P",         score:8200  },
+      { id:"d7", name:"Mathew J",       score:7500  },
+      { id:"d8", name:"George V",       score:6800  },
+      { id:"d9", name:"Paul A",         score:6200  },
+    ]
+  },
+  {
+    id:"election-predictor", name:"Election Predictor", subtitle:"Predict!",
+    emoji:"🗳️", color:"#F59E0B", unit:"% acc",
+    participants:[
+      { id:"e1", name:"Nair Analytics",    score:94.5 },
+      { id:"e2", name:"Menon Predict",     score:91.2 },
+      { id:"e3", name:"Kerala Pundits",    score:88.7 },
+      { id:"e4", name:"South Seers",       score:85.3 },
+      { id:"e5", name:"VG Experts",        score:82.1 },
+      { id:"e6", name:"Trivandrum Club",   score:78.9 },
+    ]
+  }
+];
+
+const SEED_EVENTS = [
+  {
+    id:"ev1", shortName:"E-Race Q1",
+    description:"First quarter Aaanyottam E Race competition. All participants must register before the event starts.",
+    date:"2026-04-05", time:"10:00", timezone:"Asia/Kolkata", color:"#F97316"
+  },
+  {
+    id:"ev2", shortName:"Poorathon Apr",
+    description:"Monthly walking challenge for April. Track your kilometres and submit results by end of month.",
+    date:"2026-04-15", time:"06:00", timezone:"Asia/Kolkata", color:"#22C55E"
+  },
+  {
+    id:"ev3", shortName:"Vallam Finals",
+    description:"Boat race finals at Punnamada Lake. Teams must arrive 2 hours before start. Spectators welcome!",
+    date:"2026-04-20", time:"09:00", timezone:"Asia/Kolkata", color:"#3B82F6"
+  },
+  {
+    id:"ev4", shortName:"VG Annual Meet",
+    description:"Annual gathering of Vadakkekkara Group members. Prizes will be awarded to top performers in all categories.",
+    date:"2026-05-10", time:"18:00", timezone:"Asia/Kolkata", color:"#6366F1"
+  },
+];
+
+// ═══════════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════════
+
+let _uid = 1000;
+function uid() { return "x" + (++_uid); }
+
+function sorted(arr) {
+  return [...arr].sort((a, b) => b.score - a.score);
+}
+
+function fmtScore(v, unit) {
+  const n = typeof v === "number" ? v : parseFloat(v);
+  const s = Number.isInteger(n) ? n.toLocaleString() : n.toFixed(1);
+  return `${s} ${unit}`;
+}
+
+function fmtDate(dateStr) {
+  const d = new Date(dateStr + "T00:00:00");
+  return `${MONTH_NAMES[d.getMonth()].slice(0,3)} ${d.getDate()}, ${d.getFullYear()}`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RANK BADGE
+// ═══════════════════════════════════════════════════════════
+
+function RankBadge({ rank }) {
+  if (rank === 1) return <span style={{fontSize:22}}>🥇</span>;
+  if (rank === 2) return <span style={{fontSize:22}}>🥈</span>;
+  if (rank === 3) return <span style={{fontSize:22}}>🥉</span>;
+  return (
+    <div style={{
+      width:28, height:28, borderRadius:"50%",
+      background:"#162033", border:"1px solid #2D4A6A",
+      display:"flex", alignItems:"center", justifyContent:"center",
+      fontSize:12, fontWeight:700, color:"#6A8AAA"
+    }}>{rank}</div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  HEADER
+// ═══════════════════════════════════════════════════════════
+
+function Header({ isAdmin, view, onNav, onAdminClick, onLogout }) {
+  return (
+    <header style={{
+      background:"linear-gradient(180deg, #111D30 0%, #0C1220 100%)",
+      borderBottom:"1px solid rgba(148,163,184,0.1)",
+      padding:"0 24px",
+      display:"flex", alignItems:"center", justifyContent:"space-between",
+      height:64,
+      position:"sticky", top:0, zIndex:200,
+    }}>
+      {/* Brand */}
+      <div style={{display:"flex", alignItems:"center", gap:12}}>
+        <div style={{
+          width:42, height:42,
+          background:"linear-gradient(135deg,#6366F1,#8B5CF6)",
+          borderRadius:12,
+          display:"flex", alignItems:"center", justifyContent:"center",
+          fontSize:22, fontWeight:900, color:"#fff",
+          boxShadow:"0 4px 15px rgba(99,102,241,0.35)",
+          flexShrink:0,
+        }}>V</div>
+        <div>
+          <div style={{fontSize:20, fontWeight:800, color:"#F1F5F9", letterSpacing:"-0.4px", lineHeight:1.1}}>
+            V Board
+          </div>
+          <div style={{fontSize:10, color:"#4A6A8A", letterSpacing:"1.5px", textTransform:"uppercase"}}>
+            Vadakkekkara Group
+          </div>
+        </div>
+      </div>
+
+      {/* Nav */}
+      <div style={{display:"flex", gap:8, alignItems:"center"}}>
+        <button onClick={()=>onNav("dashboard")} className="tab-btn" style={{
+          color: view==="dashboard" ? "#818CF8" : undefined,
+          background: view==="dashboard" ? "rgba(99,102,241,0.15)" : undefined,
+          fontWeight: view==="dashboard" ? 700 : undefined,
+          fontSize:14,
+        }}>🏠 Dashboard</button>
+
+        {isAdmin && (
+          <button onClick={()=>onNav("admin")} className="tab-btn" style={{
+            color: view==="admin" ? "#818CF8" : undefined,
+            background: view==="admin" ? "rgba(99,102,241,0.15)" : undefined,
+            fontWeight: view==="admin" ? 700 : undefined,
+            fontSize:14,
+          }}>⚙️ Admin</button>
+        )}
+
+        {isAdmin ? (
+          <button className="btn btn-ghost btn-sm" onClick={onLogout}
+            style={{color:"#F87171", borderColor:"#F87171"}}>
+            Sign Out
+          </button>
+        ) : (
+          <button className="btn btn-ghost btn-sm" onClick={onAdminClick}
+            style={{color:"#818CF8", borderColor:"#6366F1"}}>
+            🔐 Admin Login
+          </button>
+        )}
+
+        {isAdmin && (
+          <div style={{
+            padding:"4px 12px", borderRadius:20,
+            background:"rgba(99,102,241,0.18)",
+            fontSize:11, fontWeight:700, color:"#818CF8",
+          }}>ADMIN</div>
+        )}
+      </div>
+    </header>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LEADERBOARD CARD
+// ═══════════════════════════════════════════════════════════
+
+function LeaderboardCard({ board }) {
+  const [expanded, setExpanded] = useState(false);
+  const items = sorted(board.participants);
+  const shown = expanded ? items : items.slice(0, 5);
+
+  return (
+    <div className="card fade-in" style={{
+      borderTop:`3px solid ${board.color}`,
+      overflow:"hidden",
+    }}>
+      {/* Head */}
+      <div style={{
+        padding:"18px 22px 14px",
+        borderBottom:"1px solid rgba(148,163,184,0.07)",
+        display:"flex", alignItems:"center", gap:12,
+      }}>
+        <div style={{
+          width:50, height:50, borderRadius:13, flexShrink:0,
+          background:`${board.color}1A`,
+          border:`1px solid ${board.color}40`,
+          display:"flex", alignItems:"center", justifyContent:"center",
+          fontSize:26,
+        }}>{board.emoji}</div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:18, fontWeight:800, color:"#F1F5F9"}}>{board.name}</div>
+          <div style={{fontSize:12, color:board.color, fontWeight:600, marginTop:1}}>{board.subtitle}</div>
+        </div>
+        <div style={{
+          padding:"4px 12px", borderRadius:20,
+          background:`${board.color}18`, fontSize:11,
+          fontWeight:700, color:board.color,
+        }}>{board.participants.length} players</div>
+      </div>
+
+      {/* Rows */}
+      <div>
+        {shown.length === 0 && (
+          <div style={{padding:"32px", textAlign:"center", color:"#4A6A8A", fontSize:13}}>
+            No participants yet
+          </div>
+        )}
+        {shown.map((p, i) => {
+          const rank = i + 1;
+          const top = rank <= 3;
+          return (
+            <div key={p.id} className="lb-row" style={{
+              display:"flex", alignItems:"center",
+              padding:"10px 22px",
+              background: top ? `${board.color}08` : "transparent",
+              borderBottom:"1px solid rgba(148,163,184,0.05)",
+            }}>
+              <div style={{width:34, flexShrink:0}}>
+                <RankBadge rank={rank} />
+              </div>
+              <div style={{flex:1, marginLeft:10}}>
+                <div style={{
+                  fontSize:14, fontWeight: top ? 600 : 500,
+                  color: top ? "#F1F5F9" : "#B0C4DE"
+                }}>{p.name}</div>
+              </div>
+              <div style={{
+                fontWeight:700, fontSize: top ? 16 : 14,
+                color: top ? board.color : "#6A8AAA",
+              }}>
+                {fmtScore(p.score, board.unit)}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Expand toggle */}
+      {board.participants.length > 5 && (
+        <div style={{padding:"12px 22px", borderTop:"1px solid rgba(148,163,184,0.07)"}}>
+          <button onClick={()=>setExpanded(e=>!e)} style={{
+            width:"100%", padding:"9px",
+            background:`${board.color}12`,
+            border:`1px solid ${board.color}30`,
+            borderRadius:10, color:board.color,
+            fontWeight:700, fontSize:13,
+            cursor:"pointer", fontFamily:"inherit",
+            transition:"all 0.18s",
+          }}>
+            {expanded
+              ? "▲  Show Top 5 Only"
+              : `▼  View All ${board.participants.length} Results`
+            }
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LEADERBOARD SECTION  (tabs + active card)
+// ═══════════════════════════════════════════════════════════
+
+function LeaderboardSection({ boards }) {
+  const [tab, setTab] = useState(0);
+  const board = boards[tab] || boards[0];
+
+  // reset to tab 0 if boards array shrinks
+  useEffect(() => {
+    if (tab >= boards.length) setTab(Math.max(0, boards.length - 1));
+  }, [boards.length]);
+
+  return (
+    <div style={{flex:1, minWidth:0}}>
+      {/* Tabs */}
+      <div className="tab-row" style={{marginBottom:18}}>
+        {boards.map((lb, i) => (
+          <button key={lb.id} onClick={()=>setTab(i)} className={`tab-btn${i===tab?" active":""}`} style={{
+            color: i===tab ? lb.color : undefined,
+            border: i===tab ? `2px solid ${lb.color}` : "1px solid rgba(148,163,184,0.12)",
+            background: i===tab ? `${lb.color}18` : undefined,
+          }}>
+            <span>{lb.emoji}</span>
+            <span>{lb.name}</span>
+          </button>
+        ))}
+      </div>
+
+      {board && <LeaderboardCard key={board.id} board={board} />}
+
+      {boards.length === 0 && (
+        <div className="card" style={{padding:"48px", textAlign:"center", color:"#4A6A8A"}}>
+          No leaderboards yet. Ask an admin to create one!
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  EVENT CALENDAR
+// ═══════════════════════════════════════════════════════════
+
+function EventCalendar({ events, isAdmin, onAddEvent }) {
+  const today = new Date();
+  const [yr, setYr] = useState(today.getFullYear());
+  const [mo, setMo] = useState(today.getMonth());
+  const [selDay, setSelDay] = useState(null);
+
+  const daysInMo = new Date(yr, mo+1, 0).getDate();
+  const startDay = new Date(yr, mo, 1).getDay();
+
+  // build event map: day → events[]
+  const dayMap = {};
+  events.forEach(ev => {
+    const d = new Date(ev.date+"T00:00:00");
+    if (d.getFullYear()===yr && d.getMonth()===mo) {
+      const day = d.getDate();
+      (dayMap[day] || (dayMap[day]=[])).push(ev);
+    }
+  });
+
+  const todayKey = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
+
+  function prevMo() {
+    if (mo===0) { setYr(y=>y-1); setMo(11); } else setMo(m=>m-1);
+    setSelDay(null);
+  }
+  function nextMo() {
+    if (mo===11) { setYr(y=>y+1); setMo(0); } else setMo(m=>m+1);
+    setSelDay(null);
+  }
+
+  const cells = [];
+  for (let i=0;i<startDay;i++) cells.push(null);
+  for (let d=1;d<=daysInMo;d++) cells.push(d);
+
+  const upcoming = [...events]
+    .filter(ev=>new Date(ev.date+"T00:00:00") >= new Date(today.toDateString()))
+    .sort((a,b)=>new Date(a.date)-new Date(b.date))
+    .slice(0,6);
+
+  const selEvents = selDay ? (dayMap[selDay]||[]) : [];
+
+  return (
+    <div style={{width:330, flexShrink:0, display:"flex", flexDirection:"column", gap:16}}>
+
+      {/* ── Mini calendar ── */}
+      <div className="card" style={{overflow:"hidden"}}>
+        {/* Month nav */}
+        <div style={{
+          padding:"14px 18px",
+          background:"linear-gradient(135deg,rgba(99,102,241,0.12),rgba(139,92,246,0.08))",
+          borderBottom:"1px solid rgba(148,163,184,0.08)",
+          display:"flex", alignItems:"center", justifyContent:"space-between",
+        }}>
+          <button onClick={prevMo} style={{
+            width:30, height:30, borderRadius:8,
+            border:"1px solid rgba(148,163,184,0.15)", background:"transparent",
+            color:"#8FA4BE", fontSize:18, cursor:"pointer", lineHeight:1,
+          }}>‹</button>
+          <div style={{textAlign:"center"}}>
+            <div style={{fontWeight:800, fontSize:14, color:"#F1F5F9"}}>
+              {MONTH_NAMES[mo]} {yr}
+            </div>
+            <div style={{fontSize:10, color:"#4A6A8A", letterSpacing:"0.8px", textTransform:"uppercase"}}>
+              Event Calendar
+            </div>
+          </div>
+          <button onClick={nextMo} style={{
+            width:30, height:30, borderRadius:8,
+            border:"1px solid rgba(148,163,184,0.15)", background:"transparent",
+            color:"#8FA4BE", fontSize:18, cursor:"pointer", lineHeight:1,
+          }}>›</button>
+        </div>
+
+        {/* Day headings */}
+        <div style={{
+          display:"grid", gridTemplateColumns:"repeat(7,1fr)",
+          padding:"10px 12px 4px", gap:2,
+        }}>
+          {DAY_ABBR.map(d=>(
+            <div key={d} style={{textAlign:"center", fontSize:10, color:"#4A6A8A", fontWeight:700, padding:"3px 0"}}>
+              {d}
+            </div>
+          ))}
+        </div>
+
+        {/* Days grid */}
+        <div style={{
+          display:"grid", gridTemplateColumns:"repeat(7,1fr)",
+          padding:"4px 12px 12px", gap:2,
+        }}>
+          {cells.map((day,idx)=>{
+            if (!day) return <div key={`e${idx}`}/>;
+            const isToday = day===today.getDate() && mo===today.getMonth() && yr===today.getFullYear();
+            const isSel = day===selDay;
+            const dots = dayMap[day]||[];
+            return (
+              <div
+                key={day}
+                className="cal-day"
+                onClick={()=>setSelDay(isSel?null:day)}
+                style={{
+                  background: isSel ? "rgba(99,102,241,0.28)"
+                    : isToday ? "rgba(99,102,241,0.14)" : "transparent",
+                  border: isToday ? "1px solid rgba(99,102,241,0.4)" : "1px solid transparent",
+                }}
+              >
+                <div style={{
+                  fontSize:12, fontWeight: isToday ? 800 : 400,
+                  color: isToday ? "#818CF8" : isSel ? "#F1F5F9" : "#B0C4DE",
+                }}>{day}</div>
+                {dots.length>0 && (
+                  <div style={{display:"flex", justifyContent:"center", gap:2, marginTop:2, flexWrap:"wrap"}}>
+                    {dots.slice(0,3).map((ev,i)=>(
+                      <div key={i} style={{width:5,height:5,borderRadius:"50%",background:ev.color}} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Selected day detail */}
+        {selDay && (
+          <div style={{borderTop:"1px solid rgba(148,163,184,0.08)", padding:"12px 16px"}}>
+            <div style={{fontSize:11, fontWeight:700, color:"#6A8AAA", marginBottom:8, textTransform:"uppercase", letterSpacing:"0.8px"}}>
+              {MONTH_NAMES[mo]} {selDay}
+            </div>
+            {selEvents.length===0 ? (
+              <div style={{fontSize:12, color:"#3D5475", fontStyle:"italic"}}>No events this day</div>
+            ) : selEvents.map(ev=>(
+              <div key={ev.id} style={{
+                padding:"8px 12px", borderRadius:9,
+                background:`${ev.color}14`, borderLeft:`3px solid ${ev.color}`,
+                marginBottom:6,
+              }}>
+                <div style={{fontSize:13, fontWeight:700, color:"#F1F5F9"}}>{ev.shortName}</div>
+                <div style={{fontSize:11, color:"#8FA4BE", marginTop:2}}>
+                  {ev.time} · {ev.timezone}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Upcoming events ── */}
+      <div className="card" style={{overflow:"hidden"}}>
+        <div style={{
+          padding:"13px 18px",
+          borderBottom:"1px solid rgba(148,163,184,0.08)",
+          display:"flex", alignItems:"center", justifyContent:"space-between",
+        }}>
+          <div style={{fontSize:13, fontWeight:700, color:"#F1F5F9"}}>📅 Upcoming Events</div>
+          {isAdmin && (
+            <button className="btn btn-primary btn-sm" onClick={onAddEvent}>
+              + Add Event
+            </button>
+          )}
+        </div>
+
+        <div style={{padding:"10px 14px"}}>
+          {upcoming.length===0 ? (
+            <div style={{padding:"24px", textAlign:"center", color:"#3D5475", fontSize:13}}>
+              No upcoming events
+            </div>
+          ) : upcoming.map(ev=>{
+            const d = new Date(ev.date+"T00:00:00");
+            return (
+              <div key={ev.id} style={{
+                display:"flex", gap:12, padding:"10px 0",
+                borderBottom:"1px solid rgba(148,163,184,0.05)", alignItems:"flex-start",
+              }}>
+                <div style={{
+                  flexShrink:0, width:44, height:44, borderRadius:10,
+                  background:`${ev.color}18`, border:`1px solid ${ev.color}35`,
+                  display:"flex", flexDirection:"column",
+                  alignItems:"center", justifyContent:"center",
+                  color:ev.color,
+                }}>
+                  <div style={{fontSize:16, fontWeight:800, lineHeight:1}}>{d.getDate()}</div>
+                  <div style={{fontSize:9, textTransform:"uppercase", fontWeight:700, letterSpacing:"0.5px"}}>
+                    {MONTH_NAMES[d.getMonth()].slice(0,3)}
+                  </div>
+                </div>
+                <div style={{flex:1, minWidth:0}}>
+                  <div style={{fontSize:13, fontWeight:700, color:"#F1F5F9", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis"}}>
+                    {ev.shortName}
+                  </div>
+                  <div style={{fontSize:11, color:"#6A8AAA", marginTop:2}}>
+                    {ev.time} · {ev.timezone}
+                  </div>
+                  <div style={{
+                    fontSize:11, color:"#4A6A8A", marginTop:3,
+                    overflow:"hidden", display:"-webkit-box",
+                    WebkitLineClamp:2, WebkitBoxOrient:"vertical",
+                  }}>{ev.description}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DASHBOARD PAGE
+// ═══════════════════════════════════════════════════════════
+
+function Dashboard({ boards, events, setEvents, isAdmin }) {
+  const [showAddEvt, setShowAddEvt] = useState(false);
+
+  return (
+    <div style={{padding:"22px 24px", maxWidth:1440, margin:"0 auto"}}>
+      {/* Hero strip */}
+      <div style={{
+        marginBottom:22, display:"flex", alignItems:"center", gap:16,
+        padding:"14px 22px",
+        background:"linear-gradient(135deg,rgba(99,102,241,0.12) 0%,rgba(139,92,246,0.06) 100%)",
+        borderRadius:16, border:"1px solid rgba(99,102,241,0.2)",
+      }}>
+        <div style={{fontSize:32}}>🏆</div>
+        <div>
+          <div style={{fontSize:19, fontWeight:800, color:"#F1F5F9"}}>Vadakkekkara Group Leaderboards</div>
+          <div style={{fontSize:12, color:"#6A8AAA", marginTop:2}}>
+            Live standings across all Vadakkekkara Group events · Updated by admins
+          </div>
+        </div>
+        {isAdmin && (
+          <div style={{marginLeft:"auto"}}>
+            <div style={{
+              padding:"6px 14px", borderRadius:20,
+              background:"rgba(34,197,94,0.12)", border:"1px solid rgba(34,197,94,0.3)",
+              fontSize:12, fontWeight:700, color:"#4ADE80",
+            }}>● Admin Mode Active</div>
+          </div>
+        )}
+      </div>
+
+      <div style={{display:"flex", gap:22, alignItems:"flex-start"}}>
+        <LeaderboardSection boards={boards} />
+        <EventCalendar
+          events={events}
+          isAdmin={isAdmin}
+          onAddEvent={()=>setShowAddEvt(true)}
+        />
+      </div>
+
+      {showAddEvt && (
+        <EventModal
+          onClose={()=>setShowAddEvt(false)}
+          onSave={ev=>{
+            setEvents(prev=>[...prev,{...ev,id:uid()}]);
+            setShowAddEvt(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ADMIN PANEL
+// ═══════════════════════════════════════════════════════════
+
+function AdminPanel({ boards, setBoards, events, setEvents }) {
+  const [section, setSection] = useState("boards"); // "boards" | "events"
+  const [selIdx, setSelIdx]   = useState(0);
+  const [showNewBoard, setShowNewBoard] = useState(false);
+  const [showNewEvt, setShowNewEvt]     = useState(false);
+  const [editEvtId, setEditEvtId]       = useState(null);
+
+  // participant add form
+  const [pForm, setPForm] = useState({ name:"", score:"" });
+  const [editing, setEditing] = useState(null); // {id,name,score}
+
+  const board = boards[selIdx];
+
+  useEffect(()=>{
+    if (selIdx >= boards.length) setSelIdx(Math.max(0, boards.length-1));
+  },[boards.length]);
+
+  useEffect(()=>{ setEditing(null); setPForm({name:"",score:""}); },[selIdx]);
+
+  function addParticipant() {
+    if (!pForm.name.trim() || pForm.score==="") return;
+    setBoards(prev=>{
+      const next = [...prev];
+      next[selIdx] = {
+        ...board,
+        participants:[...board.participants,{id:uid(),name:pForm.name.trim(),score:parseFloat(pForm.score)}]
+      };
+      return next;
+    });
+    setPForm({name:"",score:""});
+  }
+
+  function saveEdit() {
+    if (!editing) return;
+    setBoards(prev=>{
+      const next=[...prev];
+      next[selIdx]={
+        ...board,
+        participants:board.participants.map(p=>
+          p.id===editing.id?{...p,name:editing.name,score:parseFloat(editing.score)}:p
+        )
+      };
+      return next;
+    });
+    setEditing(null);
+  }
+
+  function removeP(id) {
+    setBoards(prev=>{
+      const next=[...prev];
+      next[selIdx]={...board,participants:board.participants.filter(p=>p.id!==id)};
+      return next;
+    });
+  }
+
+  function deleteBoard(idx) {
+    if (!confirm(`Delete "${boards[idx].name}"? This cannot be undone.`)) return;
+    setBoards(prev=>prev.filter((_,i)=>i!==idx));
+    setSelIdx(Math.max(0,idx-1));
+  }
+
+  function deleteEvent(id) {
+    if (!confirm("Delete this event?")) return;
+    setEvents(prev=>prev.filter(e=>e.id!==id));
+  }
+
+  const sortedP = board ? sorted(board.participants) : [];
+  const editEvt  = editEvtId ? events.find(e=>e.id===editEvtId) : null;
+
+  return (
+    <div style={{padding:"22px 24px", maxWidth:1280, margin:"0 auto"}}>
+
+      {/* Admin header bar */}
+      <div className="card" style={{
+        padding:"16px 22px", marginBottom:20,
+        display:"flex", alignItems:"center", gap:14,
+        borderLeft:"4px solid #6366F1",
+      }}>
+        <div style={{
+          width:44,height:44,borderRadius:12,
+          background:"linear-gradient(135deg,#6366F1,#8B5CF6)",
+          display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,
+        }}>⚙️</div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:17,fontWeight:800,color:"#F1F5F9"}}>Admin Panel</div>
+          <div style={{fontSize:12,color:"#4A6A8A"}}>
+            Manage leaderboards and events · V Board · Vadakkekkara Group
+          </div>
+        </div>
+        <div style={{display:"flex",gap:8}}>
+          {["boards","events"].map(s=>(
+            <button key={s} onClick={()=>setSection(s)} style={{
+              padding:"8px 18px", borderRadius:10, cursor:"pointer",
+              fontFamily:"inherit", fontWeight:700, fontSize:13,
+              border: section===s ? "2px solid #6366F1" : "1px solid rgba(148,163,184,0.15)",
+              background: section===s ? "rgba(99,102,241,0.18)" : "transparent",
+              color: section===s ? "#818CF8" : "#8FA4BE",
+              transition:"all 0.18s",
+            }}>
+              {s==="boards"?"🏆 Leaderboards":"📅 Events"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── LEADERBOARDS section ── */}
+      {section==="boards" && (
+        <div style={{display:"grid", gridTemplateColumns:"270px 1fr", gap:18}}>
+
+          {/* Sidebar */}
+          <div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+              <div className="section-label">Leaderboards</div>
+              <button className="btn btn-primary btn-sm" onClick={()=>setShowNewBoard(true)}>
+                + New
+              </button>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:6}}>
+              {boards.map((lb,i)=>(
+                <div key={lb.id} onClick={()=>setSelIdx(i)} className={`sb-item${i===selIdx?" active":""}`}
+                  style={{
+                    borderColor: i===selIdx ? `${lb.color}40` : "transparent",
+                    background: i===selIdx ? `${lb.color}0E` : undefined,
+                  }}>
+                  <span style={{fontSize:20}}>{lb.emoji}</span>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:13,fontWeight:700,color:"#F1F5F9",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+                      {lb.name}
+                    </div>
+                    <div style={{fontSize:11,color:lb.color}}>{lb.subtitle}</div>
+                  </div>
+                  <div style={{
+                    fontSize:11,color:"#4A6A8A",
+                    background:"rgba(12,18,32,0.6)",
+                    padding:"2px 8px",borderRadius:10,
+                    fontWeight:600,
+                  }}>{lb.participants.length}</div>
+                </div>
+              ))}
+              {boards.length===0&&<div style={{fontSize:12,color:"#3D5475",textAlign:"center",padding:"20px 0"}}>No leaderboards</div>}
+            </div>
+          </div>
+
+          {/* Main area */}
+          {board && (
+            <div style={{display:"flex",flexDirection:"column",gap:14}}>
+
+              {/* Board info strip */}
+              <div className="card" style={{
+                padding:"16px 20px",
+                borderTop:`3px solid ${board.color}`,
+                display:"flex",alignItems:"center",gap:12,
+              }}>
+                <span style={{fontSize:28}}>{board.emoji}</span>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:17,fontWeight:800,color:"#F1F5F9"}}>{board.name}</div>
+                  <div style={{fontSize:12,color:board.color,marginTop:2}}>
+                    {board.subtitle} · Unit: <b>{board.unit}</b>
+                  </div>
+                </div>
+                {boards.length>1&&(
+                  <button className="btn-danger" onClick={()=>deleteBoard(selIdx)}>
+                    🗑 Delete Board
+                  </button>
+                )}
+              </div>
+
+              {/* Add participant */}
+              <div className="card" style={{padding:"18px 20px"}}>
+                <div style={{fontSize:13,fontWeight:700,color:"#F1F5F9",marginBottom:14}}>
+                  ➕ Add Participant
+                </div>
+                <div style={{display:"flex",gap:10,alignItems:"flex-end"}}>
+                  <div style={{flex:1}}>
+                    <label className="f-label">Name</label>
+                    <input className="f-input"
+                      value={pForm.name}
+                      onChange={e=>setPForm(p=>({...p,name:e.target.value}))}
+                      placeholder="Full name or team name"
+                    />
+                  </div>
+                  <div style={{width:150}}>
+                    <label className="f-label">Score ({board.unit})</label>
+                    <input className="f-input" type="number"
+                      value={pForm.score}
+                      onChange={e=>setPForm(p=>({...p,score:e.target.value}))}
+                      placeholder="0"
+                    />
+                  </div>
+                  <button className="btn btn-primary" style={{height:40,paddingTop:0,paddingBottom:0}}
+                    onClick={addParticipant}>
+                    Add
+                  </button>
+                </div>
+              </div>
+
+              {/* Participants list */}
+              <div className="card" style={{overflow:"hidden"}}>
+                <div style={{
+                  padding:"13px 20px",
+                  borderBottom:"1px solid rgba(148,163,184,0.07)",
+                  display:"flex",justifyContent:"space-between",alignItems:"center",
+                }}>
+                  <div style={{fontSize:13,fontWeight:700,color:"#F1F5F9"}}>
+                    Participants ({board.participants.length})
+                  </div>
+                  <div style={{fontSize:11,color:"#4A6A8A"}}>Ranked by score · highest first</div>
+                </div>
+
+                {sortedP.length===0&&(
+                  <div style={{padding:"32px",textAlign:"center",color:"#3D5475",fontSize:13}}>
+                    No participants yet — add one above
+                  </div>
+                )}
+
+                {sortedP.map((p,i)=>{
+                  const rank=i+1;
+                  const isEdit=editing?.id===p.id;
+                  return (
+                    <div key={p.id} style={{
+                      display:"flex",alignItems:"center",
+                      padding:"11px 20px",
+                      borderBottom:"1px solid rgba(148,163,184,0.05)",
+                      background:isEdit?"rgba(99,102,241,0.08)":"transparent",
+                      transition:"background 0.15s",
+                    }}>
+                      <div style={{width:32,flexShrink:0}}><RankBadge rank={rank}/></div>
+                      {isEdit ? (
+                        <div style={{flex:1,display:"flex",gap:8,marginLeft:10}}>
+                          <input className="f-input" style={{flex:1}}
+                            value={editing.name}
+                            onChange={e=>setEditing(ed=>({...ed,name:e.target.value}))}
+                          />
+                          <input className="f-input" type="number" style={{width:120}}
+                            value={editing.score}
+                            onChange={e=>setEditing(ed=>({...ed,score:e.target.value}))}
+                          />
+                          <button className="btn btn-primary btn-sm" onClick={saveEdit}>Save</button>
+                          <button className="btn btn-ghost btn-sm" onClick={()=>setEditing(null)}>Cancel</button>
+                        </div>
+                      ) : (
+                        <>
+                          <div style={{flex:1,marginLeft:10,fontSize:14,color:"#C7D5E8",fontWeight:500}}>
+                            {p.name}
+                          </div>
+                          <div style={{fontWeight:700,color:board.color,marginRight:14,fontSize:14}}>
+                            {fmtScore(p.score,board.unit)}
+                          </div>
+                          <div style={{display:"flex",gap:6}}>
+                            <button className="btn-icon" onClick={()=>setEditing({...p})}>✏️ Edit</button>
+                            <button className="btn-danger" onClick={()=>removeP(p.id)}>✕</button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {boards.length===0&&(
+            <div className="card" style={{padding:"48px",textAlign:"center",color:"#4A6A8A"}}>
+              No leaderboards yet.<br/>Click "+ New" to create one.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── EVENTS section ── */}
+      {section==="events" && (
+        <div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+            <div style={{fontSize:15,fontWeight:700,color:"#F1F5F9"}}>All Events ({events.length})</div>
+            <button className="btn btn-primary" onClick={()=>{setEditEvtId(null);setShowNewEvt(true);}}>
+              + Add Event
+            </button>
+          </div>
+          {events.length===0&&(
+            <div className="card" style={{padding:"48px",textAlign:"center",color:"#4A6A8A"}}>
+              No events yet. Click "+ Add Event" to create one.
+            </div>
+          )}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:14}}>
+            {[...events].sort((a,b)=>new Date(a.date)-new Date(b.date)).map(ev=>{
+              const d=new Date(ev.date+"T00:00:00");
+              return (
+                <div key={ev.id} className="card" style={{
+                  padding:"16px 18px",
+                  borderLeft:`4px solid ${ev.color}`,
+                }}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+                    <div style={{fontSize:14,fontWeight:800,color:"#F1F5F9",display:"flex",alignItems:"center",gap:8}}>
+                      <div style={{width:9,height:9,borderRadius:"50%",background:ev.color,flexShrink:0}}/>
+                      {ev.shortName}
+                    </div>
+                    <div style={{display:"flex",gap:6}}>
+                      <button className="btn-icon" style={{fontSize:12}} onClick={()=>{setEditEvtId(ev.id);setShowNewEvt(true);}}>
+                        ✏️
+                      </button>
+                      <button className="btn-danger" style={{padding:"4px 10px"}} onClick={()=>deleteEvent(ev.id)}>✕</button>
+                    </div>
+                  </div>
+                  <div style={{fontSize:11,color:"#6A8AAA",marginBottom:8}}>
+                    📅 {fmtDate(ev.date)} &nbsp;·&nbsp; ⏰ {ev.time} &nbsp;·&nbsp; 🌍 {ev.timezone}
+                  </div>
+                  {ev.description&&(
+                    <div style={{fontSize:12,color:"#4A6A8A",lineHeight:1.55}}>{ev.description}</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Modals */}
+      {showNewBoard && (
+        <NewBoardModal
+          onClose={()=>setShowNewBoard(false)}
+          onSave={lb=>{
+            setBoards(prev=>[...prev,{...lb,id:uid(),participants:[]}]);
+            setSelIdx(boards.length);
+            setShowNewBoard(false);
+            setSection("boards");
+          }}
+        />
+      )}
+      {showNewEvt && (
+        <EventModal
+          editEvent={editEvt}
+          onClose={()=>{setShowNewEvt(false);setEditEvtId(null);}}
+          onSave={ev=>{
+            if (editEvtId) {
+              setEvents(prev=>prev.map(e=>e.id===editEvtId?{...ev,id:editEvtId}:e));
+            } else {
+              setEvents(prev=>[...prev,{...ev,id:uid()}]);
+            }
+            setShowNewEvt(false);
+            setEditEvtId(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  NEW BOARD MODAL
+// ═══════════════════════════════════════════════════════════
+
+function NewBoardModal({ onClose, onSave }) {
+  const [f, setF] = useState({
+    name:"", subtitle:"", unit:"pts", emoji:"🏆", color:"#6366F1"
+  });
+
+  function submit() {
+    if (!f.name.trim()||!f.subtitle.trim()) return;
+    onSave(f);
+  }
+
+  return (
+    <div className="overlay">
+      <div className="modal modal-wide">
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
+          <div style={{fontSize:18,fontWeight:800,color:"#F1F5F9"}}>🏆 Create New Leaderboard</div>
+          <button onClick={onClose} style={{background:"transparent",border:"none",color:"#4A6A8A",fontSize:22,cursor:"pointer"}}>×</button>
+        </div>
+
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+          <div style={{gridColumn:"1/-1"}}>
+            <label className="f-label">Leaderboard Name *</label>
+            <input className="f-input" value={f.name}
+              onChange={e=>setF(x=>({...x,name:e.target.value}))}
+              placeholder="e.g. Aaanyottam"
+            />
+          </div>
+          <div>
+            <label className="f-label">Subtitle / Game Type *</label>
+            <input className="f-input" value={f.subtitle}
+              onChange={e=>setF(x=>({...x,subtitle:e.target.value}))}
+              placeholder="e.g. E Race"
+            />
+          </div>
+          <div>
+            <label className="f-label">Score Unit</label>
+            <input className="f-input" value={f.unit}
+              onChange={e=>setF(x=>({...x,unit:e.target.value}))}
+              placeholder="pts, km, % acc …"
+            />
+          </div>
+        </div>
+
+        <div style={{marginTop:16}}>
+          <label className="f-label">Emoji Icon</label>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:6}}>
+            {EMOJIS.map(em=>(
+              <div key={em} onClick={()=>setF(x=>({...x,emoji:em}))}
+                className={`em-tile${f.emoji===em?" selected":""}`}>
+                {em}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{marginTop:16}}>
+          <label className="f-label">Color Theme</label>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:6}}>
+            {COLOR_OPTS.map(c=>(
+              <div key={c.hex} onClick={()=>setF(x=>({...x,color:c.hex}))}
+                className={`swatch${f.color===c.hex?" selected":""}`}
+                title={c.name} style={{background:c.hex}} />
+            ))}
+          </div>
+        </div>
+
+        {/* Preview */}
+        <div style={{
+          marginTop:18, padding:"12px 16px", borderRadius:12,
+          background:`${f.color}12`, border:`1px solid ${f.color}35`,
+          display:"flex",alignItems:"center",gap:12,
+        }}>
+          <span style={{fontSize:28}}>{f.emoji}</span>
+          <div>
+            <div style={{fontSize:15,fontWeight:800,color:"#F1F5F9"}}>{f.name||"Preview Name"}</div>
+            <div style={{fontSize:12,color:f.color}}>{f.subtitle||"Subtitle"} · {f.unit}</div>
+          </div>
+        </div>
+
+        <div style={{display:"flex",gap:10,marginTop:22}}>
+          <button className="btn btn-ghost" style={{flex:1}} onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" style={{flex:1}} onClick={submit}>
+            Create Leaderboard
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  EVENT MODAL  (add / edit)
+// ═══════════════════════════════════════════════════════════
+
+function EventModal({ editEvent, onClose, onSave }) {
+  const [f, setF] = useState(editEvent || {
+    shortName:"", description:"",
+    date:"", time:"10:00",
+    timezone:"Asia/Kolkata", color:"#6366F1",
+  });
+
+  function submit() {
+    if (!f.shortName.trim()||!f.date) return;
+    onSave(f);
+  }
+
+  return (
+    <div className="overlay">
+      <div className="modal">
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
+          <div style={{fontSize:17,fontWeight:800,color:"#F1F5F9"}}>
+            📅 {editEvent?"Edit Event":"Add New Event"}
+          </div>
+          <button onClick={onClose} style={{background:"transparent",border:"none",color:"#4A6A8A",fontSize:22,cursor:"pointer"}}>×</button>
+        </div>
+
+        <div style={{marginBottom:14}}>
+          <label className="f-label">Short Name *</label>
+          <input className="f-input" value={f.shortName} maxLength={40}
+            onChange={e=>setF(x=>({...x,shortName:e.target.value}))}
+            placeholder="e.g. E-Race Q1"
+          />
+        </div>
+
+        <div style={{marginBottom:14}}>
+          <label className="f-label">Description</label>
+          <textarea className="f-input" value={f.description} rows={3}
+            onChange={e=>setF(x=>({...x,description:e.target.value}))}
+            placeholder="Event details, rules, venue…"
+            style={{resize:"vertical"}}
+          />
+        </div>
+
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
+          <div>
+            <label className="f-label">Date *</label>
+            <input className="f-input" type="date" value={f.date}
+              onChange={e=>setF(x=>({...x,date:e.target.value}))}
+            />
+          </div>
+          <div>
+            <label className="f-label">Time</label>
+            <input className="f-input" type="time" value={f.time}
+              onChange={e=>setF(x=>({...x,time:e.target.value}))}
+            />
+          </div>
+        </div>
+
+        <div style={{marginBottom:14}}>
+          <label className="f-label">Timezone</label>
+          <select className="f-input" value={f.timezone}
+            onChange={e=>setF(x=>({...x,timezone:e.target.value}))}>
+            {TIMEZONES.map(tz=><option key={tz} value={tz}>{tz}</option>)}
+          </select>
+        </div>
+
+        <div style={{marginBottom:20}}>
+          <label className="f-label">Event Colour</label>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:6}}>
+            {COLOR_OPTS.map(c=>(
+              <div key={c.hex} onClick={()=>setF(x=>({...x,color:c.hex}))}
+                className={`swatch${f.color===c.hex?" selected":""}`}
+                title={c.name} style={{background:c.hex}} />
+            ))}
+          </div>
+        </div>
+
+        <div style={{display:"flex",gap:10}}>
+          <button className="btn btn-ghost" style={{flex:1}} onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" style={{flex:1}} onClick={submit}>
+            {editEvent?"Save Changes":"Add Event"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LOGIN MODAL
+// ═══════════════════════════════════════════════════════════
+
+function LoginModal({ onClose, onSuccess }) {
+  const [pass, setPass] = useState("");
+  const [err, setErr]   = useState("");
+  const ref = useRef();
+
+  useEffect(()=>{ ref.current && ref.current.focus(); },[]);
+
+  function tryLogin() {
+    if (pass===ADMIN_PASS) { onSuccess(); }
+    else { setErr("Incorrect password. Please try again."); }
+  }
+
+  return (
+    <div className="overlay">
+      <div className="modal" style={{maxWidth:380}}>
+        <div style={{textAlign:"center",marginBottom:24}}>
+          <div style={{
+            width:56,height:56,
+            background:"linear-gradient(135deg,#6366F1,#8B5CF6)",
+            borderRadius:16,margin:"0 auto 14px",
+            display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,
+            boxShadow:"0 8px 25px rgba(99,102,241,0.4)",
+          }}>🔐</div>
+          <div style={{fontSize:19,fontWeight:800,color:"#F1F5F9"}}>Admin Access</div>
+          <div style={{fontSize:13,color:"#4A6A8A",marginTop:4}}>
+            Enter the admin password to continue
+          </div>
+        </div>
+
+        <div style={{marginBottom:8}}>
+          <label className="f-label">Password</label>
+          <input ref={ref} className="f-input" type="password"
+            value={pass}
+            onChange={e=>{setPass(e.target.value);setErr("");}}
+            onKeyDown={e=>e.key==="Enter"&&tryLogin()}
+            placeholder="••••••••"
+          />
+          {err&&<div style={{color:"#F87171",fontSize:12,marginTop:6}}>{err}</div>}
+        </div>
+
+        <div style={{display:"flex",gap:10,marginTop:20}}>
+          <button className="btn btn-ghost" style={{flex:1}} onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" style={{flex:1}} onClick={tryLogin}>Login</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  APP ROOT
+// ═══════════════════════════════════════════════════════════
+
+function App() {
+  const [boards, setBoards] = useState(SEED_BOARDS);
+  const [events, setEvents] = useState(SEED_EVENTS);
+  const [isAdmin, setIsAdmin]     = useState(false);
+  const [view, setView]           = useState("dashboard");
+  const [showLogin, setShowLogin] = useState(false);
+
+  function handleLogin() {
+    setIsAdmin(true);
+    setShowLogin(false);
+    setView("admin");
+  }
+
+  function handleLogout() {
+    setIsAdmin(false);
+    setView("dashboard");
+  }
+
+  function handleAdminClick() {
+    if (isAdmin) setView("admin");
+    else setShowLogin(true);
+  }
+
+  return (
+    <div>
+      <Header
+        isAdmin={isAdmin}
+        view={view}
+        onNav={setView}
+        onAdminClick={handleAdminClick}
+        onLogout={handleLogout}
+      />
+
+      {view==="dashboard" ? (
+        <Dashboard boards={boards} events={events} setEvents={setEvents} isAdmin={isAdmin} />
+      ) : (
+        <AdminPanel
+          boards={boards} setBoards={setBoards}
+          events={events} setEvents={setEvents}
+        />
+      )}
+
+      {showLogin && (
+        <LoginModal
+          onClose={()=>setShowLogin(false)}
+          onSuccess={handleLogin}
+        />
+      )}
+    </div>
+  );
+}
+
+ReactDOM.render(<App />, document.getElementById("root"));
+</script>
+</body>
+</html>

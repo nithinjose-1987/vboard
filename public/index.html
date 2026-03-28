@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>V Board – Vadakkekkara Group</title>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      background: #0C1220;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #E2E8F0; min-height: 100vh;
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #1A2535; }
+    ::-webkit-scrollbar-thumb { background: #3A4F6A; border-radius: 3px; }
+
+    .card {
+      background: rgba(22,35,55,0.9);
+      border: 1px solid rgba(148,163,184,0.1);
+      border-radius: 18px; backdrop-filter: blur(12px);
+    }
+
+    @keyframes fadeIn {
+      from { opacity:0; transform:translateY(10px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .fade-in { animation: fadeIn 0.3s ease forwards; }
+
+    @keyframes shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position: 400px 0; }
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    @keyframes albumFade {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    /* ── Coming Soon shimmer ── */
+    .coming-soon-badge {
+      display:inline-block;
+      background: linear-gradient(90deg, #1E3A5F 25%, #2E4F7A 50%, #1E3A5F 75%);
+      background-size: 400px 100%;
+      animation: shimmer 2.5s infinite linear;
+      border-radius: 20px; padding: 4px 14px;
+      font-size: 11px; font-weight: 800;
+      letter-spacing: 1px; text-transform: uppercase;
+      color: #5A9FD4;
+    }
+
+    /* ── Modal ── */
+    .overlay {
+      position:fixed; inset:0; background:rgba(5,10,20,0.82);
+      display:flex; align-items:center; justify-content:center;
+      z-index:600; backdrop-filter:blur(6px);
+    }
+    .modal {
+      background:#101D30; border:1px solid rgba(148,163,184,0.18);
+      border-radius:22px; padding:32px; width:92%; max-width:540px;
+      max-height:92vh; overflow-y:auto;
+    }
+    .modal-lg  { max-width:660px; }
+    .modal-detail { max-width:580px; padding:0; overflow:hidden; }
+
+    /* ── Forms ── */
+    .fl { display:block; font-size:11px; font-weight:700; color:#6A8AAA;
+          text-transform:uppercase; letter-spacing:.7px; margin-bottom:5px; }
+    .fi {
+      width:100%; background:#090F1C; border:1px solid #1D3050;
+      border-radius:10px; padding:10px 14px; color:#E2E8F0; font-size:14px;
+      transition:border-color .2s; font-family:inherit;
+    }
+    .fi:focus { outline:none; border-color:#6366F1; }
+    .fi::placeholder { color:#2D4868; }
+    select.fi option { background:#101D30; color:#E2E8F0; }
+
+    /* ── Buttons ── */
+    .btn {
+      cursor:pointer; border:none; border-radius:10px;
+      font-family:inherit; font-weight:700; transition:all .18s;
+      display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    }
+    .btn-p {
+      background:linear-gradient(135deg,#6366F1,#8B5CF6);
+      color:#fff; padding:10px 20px; font-size:14px;
+    }
+    .btn-p:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(99,102,241,.4); }
+    .btn-g {
+      background:transparent; color:#8FA4BE;
+      border:1px solid #1D3050; padding:10px 20px; font-size:14px;
+    }
+    .btn-g:hover { border-color:#6366F1; color:#E2E8F0; }
+    .btn-sm { padding:6px 14px; font-size:12px; border-radius:8px; }
+    .btn-d {
+      background:transparent; color:#F87171; border:1px solid #F87171;
+      padding:5px 12px; font-size:12px; border-radius:8px;
+      cursor:pointer; font-family:inherit; transition:background .15s;
+    }
+    .btn-d:hover { background:rgba(248,113,113,.12); }
+    .btn-i {
+      background:transparent; color:#8FA4BE; border:1px solid #1D3050;
+      padding:5px 10px; font-size:12px; border-radius:8px;
+      cursor:pointer; font-family:inherit; transition:all .15s;
+    }
+    .btn-i:hover { border-color:#6366F1; color:#E2E8F0; }
+    .btn-link {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:10px 20px; border-radius:10px; font-size:14px;
+      font-weight:700; cursor:pointer; transition:all .18s;
+      text-decoration:none;
+      background:linear-gradient(135deg,#0EA5E9,#3B82F6);
+      color:#fff; border:none;
+    }
+    .btn-link:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(14,165,233,.4); }
+
+    /* ── Calendar day ── */
+    .cal-d {
+      border-radius:8px; padding:5px 3px; text-align:center;
+      cursor:pointer; transition:all .15s; position:relative;
+      user-select:none;
+    }
+
+    /* ── Leaderboard row hover ── */
+    .lb-r { transition:background .15s; }
+    .lb-r:hover { background:rgba(99,102,241,.06) !important; }
+
+    /* ── Tabs ── */
+    .tab-row { display:flex; gap:6px; overflow-x:auto;
+               padding-bottom:4px; scrollbar-width:none; }
+    .tab-row::-webkit-scrollbar { display:none; }
+    .tab-btn {
+      padding:8px 14px; border-radius:10px; border:1px solid rgba(148,163,184,.12);
+      background:transparent; cursor:pointer; font-family:inherit; font-size:13px;
+      font-weight:500; transition:all .18s; white-space:nowrap;
+      display:flex; align-items:center; gap:7px; color:#7A96B2;
+    }
+    .tab-btn:hover { color:#C7D5E8; background:rgba(148,163,184,.07); }
+    .tab-btn.active { font-weight:700; }
+
+    /* ── Admin sidebar ── */
+    .sb-i {
+      padding:11px 14px; border-radius:12px; cursor:pointer;
+      transition:all .18s; display:flex; align-items:center; gap:10px;
+      border:1px solid transparent;
+    }
+    .sb-i:hover { background:rgba(148,163,184,.05); }
+
+    /* ── Event card ── */
+    .ev-card {
+      display:flex; gap:12px; padding:10px 0;
+      border-bottom:1px solid rgba(148,163,184,.06);
+      cursor:pointer; transition:opacity .15s;
+    }
+    .ev-card:hover { opacity:.78; }
+
+    /* ── Swatches ── */
+    .sw {
+      width:28px; height:28px; border-radius:7px; cursor:pointer;
+      transition:transform .12s; border:3px solid transparent; flex-shrink:0;
+    }
+    .sw:hover { transform:scale(1.1); }
+    .sw.sel { border-color:#fff; transform:scale(1.18); }
+
+    /* ── Emoji tile ── */
+    .em {
+      width:38px; height:38px; border-radius:9px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:19px; cursor:pointer; transition:all .12s;
+      background:rgba(9,15,28,.7); border:1px solid #1D3050;
+    }
+    .em:hover { background:rgba(99,102,241,.18); }
+    .em.sel { background:rgba(99,102,241,.3); border-color:#6366F1; }
+
+    .file-btn { display:none; }
+    .img-thumb { width:100%; max-height:160px; object-fit:cover; border-radius:10px; margin-top:8px; display:block; }
+
+    .sec-lbl {
+      font-size:10px; font-weight:800; letter-spacing:1.3px;
+      text-transform:uppercase; color:#3D5A7A; margin-bottom:10px;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position:fixed; bottom:24px; right:24px;
+      background:#1E3A5F; border:1px solid #3B6494;
+      border-radius:12px; padding:12px 20px;
+      font-size:14px; font-weight:600; color:#94D0FF;
+      z-index:700; animation:fadeIn .3s ease;
+      box-shadow:0 8px 30px rgba(0,0,0,.4);
+    }
+
+    .board-icon {
+      width:50px; height:50px; border-radius:13px; flex-shrink:0;
+      overflow:hidden; display:flex; align-items:center;
+      justify-content:center; font-size:26px;
+    }
+    .board-icon img { width:100%; height:100%; object-fit:cover; }
+
+    .upload-zone {
+      border:2px dashed #1D3050; border-radius:10px;
+      padding:14px; text-align:center; cursor:pointer;
+      transition:border-color .2s; margin-top:6px;
+    }
+    .upload-zone:hover { border-color:#6366F1; }
+
+    /* ── Calendar tooltip ── */
+    .cal-tooltip {
+      position:fixed; z-index:800; pointer-events:none;
+      background:#0D1E35; border:1px solid rgba(99,102,241,.35);
+      border-radius:10px; padding:10px 14px;
+      box-shadow:0 8px 30px rgba(0,0,0,.5);
+      min-width:160px; max-width:240px;
+    }
+    .cal-tooltip-row {
+      display:flex; align-items:center; gap:7px;
+      font-size:12px; color:#C8DCF0; padding:3px 0;
+    }
+    .cal-tooltip-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+    /* ── Photo Album ── */
+    .album-wrap {
+      display: flex;
+      min-height: 260px;
+    }
+    .album-img-pane {
+      width: 55%;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+      background: #090F1C;
+      border-radius: 0 0 0 18px;
+    }
+    .album-img-pane img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      animation: albumFade 0.35s ease;
+    }
+    .album-arrow {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(9,15,28,.75); border: 1px solid rgba(99,102,241,.4);
+      color: #818CF8; font-size: 20px; cursor: pointer; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .18s; z-index: 2;
+    }
+    .album-arrow:hover { background: rgba(99,102,241,.3); }
+    .album-dot {
+      height: 7px; border-radius: 4px; cursor: pointer;
+      transition: all .22s; flex-shrink: 0;
+    }
+    .album-desc-pane {
+      flex: 1;
+      padding: 22px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    /* ── Dashboard layout ── */
+    .dash-row {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+    .dash-left {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .dash-right {
+      width: 330px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 767px) {
+      .dash-row      { flex-direction: column; }
+      .dash-right    { width: 100%; }
+      .dash-pad      { padding: 14px !important; }
+      .album-wrap    { flex-direction: column; min-height: unset; }
+      .album-img-pane { width: 100%; height: 220px; border-radius: 0; flex-shrink: 0; }
+      .album-desc-pane { padding: 16px; }
+      .hdr-sub       { display: none; }
+    }
+    @media (max-width: 480px) {
+      .tab-btn .tab-lbl { display: none; }
+      .dash-pad { padding: 10px !important; }
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// ═══════════════════════════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════════════════════════
+const MONTH_NAMES = ["January","February","March","April","May","June",
+                     "July","August","September","October","November","December"];
+const DAY_ABBR   = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+const TIMEZONES  = [
+  "Asia/Kolkata","Asia/Dubai","Asia/Singapore","Asia/Tokyo","Asia/Shanghai",
+  "Asia/Colombo","Asia/Bangkok","Australia/Sydney",
+  "Europe/London","Europe/Paris","Europe/Berlin",
+  "America/New_York","America/Chicago","America/Los_Angeles","America/Toronto",
+  "Pacific/Auckland",
+];
+const COLORS = [
+  {name:"Indigo", hex:"#6366F1"}, {name:"Ember",  hex:"#F97316"},
+  {name:"Jade",   hex:"#22C55E"}, {name:"Ocean",  hex:"#3B82F6"},
+  {name:"Violet", hex:"#A855F7"}, {name:"Gold",   hex:"#F59E0B"},
+  {name:"Rose",   hex:"#EC4899"}, {name:"Teal",   hex:"#14B8A6"},
+  {name:"Crimson",hex:"#EF4444"}, {name:"Cyan",   hex:"#06B6D4"},
+];
+const EMOJIS = ["🐘","🚶","🚣","🎲","🗳️","🏆","⚽","🎯","🎮","🏋️",
+                "🤺","🎳","🃏","♟️","🏇","🤸","🎾","🏸","🥊","🎱","🎰","🧩","🦁","🦅"];
+
+// ═══════════════════════════════════════════════════════════
+//  API HELPERS
+// ═══════════════════════════════════════════════════════════
+async function apiFetch(url, opts={}) {
+  const res = await fetch(url, opts);
+  if (!res.ok) { const t=await res.text().catch(()=>''); throw new Error(t||`HTTP ${res.status}`); }
+  return res.json();
+}
+async function adminJson(url, method='POST', body, pass) {
+  return apiFetch(url, {
+    method,
+    headers:{'Content-Type':'application/json','x-admin-password':pass},
+    body: JSON.stringify(body),
+  });
+}
+async function adminUpload(url, method='POST', formData, pass) {
+  const res = await fetch(url, { method, headers:{'x-admin-password':pass}, body:formData });
+  if (!res.ok) throw new Error(await res.text().catch(()=>'Upload failed'));
+  return res.json();
+}
+function fmtScore(v, unit) {
+  const n=parseFloat(v);
+  return `${Number.isInteger(n)?n.toLocaleString():n.toFixed(1)} ${unit}`;
+}
+function fmtDate(d) {
+  const dt=new Date(d+'T00:00:00');
+  return `${MONTH_NAMES[dt.getMonth()].slice(0,3)} ${dt.getDate()}, ${dt.getFullYear()}`;
+}
+function sortedP(arr) { return [...arr].sort((a,b)=>b.score-a.score); }
+
+// ═══════════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════════
+function Toast({ msg }) { return msg ? <div className="toast">{msg}</div> : null; }
+
+// ═══════════════════════════════════════════════════════════
+//  RANK BADGE
+// ═══════════════════════════════════════════════════════════
+function RankBadge({ rank }) {
+  if (rank===1) return <span style={{fontSize:22}}>🥇</span>;
+  if (rank===2) return <span style={{fontSize:22}}>🥈</span>;
+  if (rank===3) return <span style={{fontSize:22}}>🥉</span>;
+  return (
+    <div style={{
+      width:27,height:27,borderRadius:'50%',background:'#0E1A2A',
+      border:'1px solid #243650',display:'flex',alignItems:'center',
+      justifyContent:'center',fontSize:11,fontWeight:700,color:'#5A7A9A'
+    }}>{rank}</div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  BOARD ICON
+// ═══════════════════════════════════════════════════════════
+function BoardIcon({ board, size=50 }) {
+  return (
+    <div className="board-icon" style={{
+      width:size, height:size,
+      background: board.image_url ? 'transparent' : `${board.color}1A`,
+      border: board.image_url ? 'none' : `1px solid ${board.color}40`,
+      fontSize: size*0.52,
+    }}>
+      {board.image_url ? <img src={board.image_url} alt={board.name}/> : board.emoji}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  HEADER
+// ═══════════════════════════════════════════════════════════
+function Header({ isAdmin, view, onNav, onAdminClick, onLogout }) {
+  return (
+    <header style={{
+      background:'linear-gradient(180deg,#111D30 0%,#0C1220 100%)',
+      borderBottom:'1px solid rgba(148,163,184,.1)',
+      padding:'0 24px',display:'flex',alignItems:'center',
+      justifyContent:'space-between',height:64,
+      position:'sticky',top:0,zIndex:300,
+    }}>
+      <div style={{display:'flex',alignItems:'center',gap:12}}>
+        <div style={{
+          width:42,height:42,background:'linear-gradient(135deg,#6366F1,#8B5CF6)',
+          borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',
+          fontSize:22,fontWeight:900,color:'#fff',
+          boxShadow:'0 4px 15px rgba(99,102,241,.35)',flexShrink:0,
+        }}>V</div>
+        <div>
+          <div style={{fontSize:20,fontWeight:800,color:'#F1F5F9',letterSpacing:'-.4px',lineHeight:1.1}}>V Board</div>
+          <div className="hdr-sub" style={{fontSize:10,color:'#3D5A7A',letterSpacing:'1.5px',textTransform:'uppercase'}}>Vadakkekkara Group</div>
+        </div>
+      </div>
+      <div style={{display:'flex',gap:8,alignItems:'center'}}>
+        {['dashboard','admin'].map(v=>{
+          if (v==='admin'&&!isAdmin) return null;
+          return (
+            <button key={v} onClick={()=>onNav(v)} className="tab-btn"
+              style={{
+                color:view===v?'#818CF8':undefined,
+                background:view===v?'rgba(99,102,241,.15)':undefined,
+                fontWeight:view===v?700:undefined,
+                fontSize:14,border:'none',padding:'8px 16px',
+              }}>
+              {v==='dashboard'?'🏠 Dashboard':'⚙️ Admin'}
+            </button>
+          );
+        })}
+        {isAdmin
+          ? <button className="btn btn-d" style={{borderRadius:8}} onClick={onLogout}>Sign Out</button>
+          : <button className="btn btn-g btn-sm" style={{color:'#818CF8',borderColor:'#6366F1'}} onClick={onAdminClick}>🔐 Admin Login</button>
+        }
+        {isAdmin&&(
+          <div style={{padding:'4px 12px',borderRadius:20,background:'rgba(99,102,241,.18)',fontSize:11,fontWeight:700,color:'#818CF8'}}>ADMIN</div>
+        )}
+      </div>
+    </header>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LEADERBOARD CARD
+// ═══════════════════════════════════════════════════════════
+function LeaderboardCard({ board }) {
+  const [expanded, setExpanded] = useState(false);
+  const participants = board.participants || [];
+  const isEmpty = participants.length === 0;
+  const items = sortedP(participants);
+  const shown = expanded ? items : items.slice(0, 5);
+
+  return (
+    <div className="card fade-in" style={{borderTop:`3px solid ${board.color}`,overflow:'hidden'}}>
+      <div style={{
+        padding:'18px 22px 14px',
+        borderBottom:'1px solid rgba(148,163,184,.07)',
+        display:'flex',alignItems:'center',gap:12,
+      }}>
+        <BoardIcon board={board}/>
+        <div style={{flex:1}}>
+          <div style={{fontSize:18,fontWeight:800,color:'#F1F5F9'}}>{board.name}</div>
+          <div style={{fontSize:12,color:board.color,fontWeight:600,marginTop:1}}>{board.subtitle}</div>
+        </div>
+        {isEmpty
+          ? <div className="coming-soon-badge">Coming Soon</div>
+          : <div style={{padding:'4px 12px',borderRadius:20,background:`${board.color}18`,fontSize:11,fontWeight:700,color:board.color,flexShrink:0}}>
+              {participants.length} players
+            </div>
+        }
+      </div>
+
+      {isEmpty && (
+        <div style={{
+          padding:'32px 24px 28px',textAlign:'center',
+          background:`linear-gradient(180deg, ${board.color}06 0%, transparent 100%)`,
+        }}>
+          <div style={{fontSize:50,marginBottom:12,filter:`drop-shadow(0 0 18px ${board.color}55)`}}>{board.emoji}</div>
+          <div style={{fontSize:20,fontWeight:800,color:'#E2E8F0',marginBottom:6}}>Coming Soon</div>
+          <div style={{fontSize:13,color:'#4A6A8A',maxWidth:260,margin:'0 auto',lineHeight:1.6}}>
+            Results will appear here once the competition gets underway.
+          </div>
+          <div style={{
+            marginTop:16,display:'inline-flex',alignItems:'center',gap:8,
+            padding:'7px 16px',borderRadius:20,
+            background:`${board.color}15`,border:`1px dashed ${board.color}40`,
+            fontSize:12,color:board.color,fontWeight:600,
+          }}>⏳ Awaiting Results</div>
+        </div>
+      )}
+
+      {!isEmpty && (
+        <div>
+          {shown.map((p,i)=>{
+            const rank=i+1, top=rank<=3;
+            return (
+              <div key={p.id} className="lb-r" style={{
+                display:'flex',alignItems:'center',padding:'10px 22px',
+                background:top?`${board.color}09`:'transparent',
+                borderBottom:'1px solid rgba(148,163,184,.05)',
+              }}>
+                <div style={{width:34,flexShrink:0}}><RankBadge rank={rank}/></div>
+                <div style={{flex:1,marginLeft:10}}>
+                  <div style={{fontSize:14,fontWeight:top?600:500,color:top?'#F1F5F9':'#A0BCCC'}}>
+                    {p.name}
+                  </div>
+                </div>
+                <div style={{fontWeight:700,fontSize:top?16:14,color:top?board.color:'#5A7A8A'}}>
+                  {fmtScore(p.score, board.unit)}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {!isEmpty && participants.length > 5 && (
+        <div style={{padding:'12px 22px',borderTop:'1px solid rgba(148,163,184,.07)'}}>
+          <button onClick={()=>setExpanded(e=>!e)} style={{
+            width:'100%',padding:'9px',
+            background:`${board.color}12`,border:`1px solid ${board.color}30`,
+            borderRadius:10,color:board.color,fontWeight:700,fontSize:13,
+            cursor:'pointer',fontFamily:'inherit',transition:'all .18s',
+          }}>
+            {expanded ? '▲  Show Top 5 Only' : `▼  View All ${participants.length} Results`}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LeaderboardSection({ boards }) {
+  const [tab, setTab] = useState(0);
+  useEffect(()=>{ if(tab>=boards.length) setTab(Math.max(0,boards.length-1)); },[boards.length]);
+  const board = boards[tab] || boards[0];
+  return (
+    <div>
+      <div className="tab-row" style={{marginBottom:18}}>
+        {boards.map((lb,i)=>(
+          <button key={lb.id} onClick={()=>setTab(i)}
+            className={`tab-btn${i===tab?' active':''}`}
+            style={{
+              color:i===tab?lb.color:undefined,
+              border:i===tab?`2px solid ${lb.color}`:'1px solid rgba(148,163,184,.12)',
+              background:i===tab?`${lb.color}18`:undefined,
+            }}>
+            {lb.image_url
+              ? <img src={lb.image_url} alt="" style={{width:20,height:20,borderRadius:4,objectFit:'cover'}}/>
+              : <span>{lb.emoji}</span>
+            }
+            <span className="tab-lbl">{lb.name}</span>
+            {(lb.participants||[]).length===0 && (
+              <span style={{fontSize:9,padding:'1px 6px',borderRadius:8,background:'rgba(90,154,212,.15)',color:'#5A9FD4',fontWeight:700,letterSpacing:'.5px',textTransform:'uppercase'}}>soon</span>
+            )}
+          </button>
+        ))}
+      </div>
+      {board && <LeaderboardCard key={board.id} board={board}/>}
+      {boards.length===0&&(
+        <div className="card" style={{padding:'48px',textAlign:'center',color:'#3D5A7A'}}>No leaderboards yet.</div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PHOTO ALBUM WIDGET
+// ═══════════════════════════════════════════════════════════
+//  EVENT SLIDESHOW  — uses events as the data source
+// ═══════════════════════════════════════════════════════════
+function EventSlideshow({ events, onEventClick }) {
+  const [idx, setIdx]       = useState(0);
+  const [paused, setPaused] = useState(false);
+  const intervalRef         = useRef(null);
+
+  // Sort all events: upcoming first (ascending), then past (descending)
+  const slides = [
+    ...[...events].filter(e => new Date(e.date+'T00:00:00') >= new Date(new Date().toDateString()))
+                  .sort((a,b) => new Date(a.date)-new Date(b.date)),
+    ...[...events].filter(e => new Date(e.date+'T00:00:00') <  new Date(new Date().toDateString()))
+                  .sort((a,b) => new Date(b.date)-new Date(a.date)),
+  ];
+  const count = slides.length;
+
+  // Clamp index when events list changes
+  useEffect(()=>{
+    if (count > 0 && idx >= count) setIdx(count - 1);
+  }, [count]);
+
+  // Auto-advance every 6 s
+  useEffect(()=>{
+    clearInterval(intervalRef.current);
+    if (count <= 1 || paused) return;
+    intervalRef.current = setInterval(()=>{
+      setIdx(prev => (prev + 1) % count);
+    }, 6000);
+    return () => clearInterval(intervalRef.current);
+  }, [count, paused]);
+
+  if (count === 0) return null;
+
+  function prev(e) { e.stopPropagation(); setIdx(i=>(i-1+count)%count); }
+  function next(e) { e.stopPropagation(); setIdx(i=>(i+1)%count); }
+
+  const ev  = slides[idx];
+  const d   = new Date(ev.date+'T00:00:00');
+  const dateStr = `${MONTH_NAMES[d.getMonth()].slice(0,3)} ${d.getDate()}, ${d.getFullYear()}`;
+  const isPast  = d < new Date(new Date().toDateString());
+
+  return (
+    <div className="card" style={{overflow:'hidden'}}>
+      {/* Header */}
+      <div style={{
+        padding:'13px 18px', borderBottom:'1px solid rgba(148,163,184,.08)',
+        display:'flex', alignItems:'center', justifyContent:'space-between',
+      }}>
+        <div style={{fontSize:13,fontWeight:700,color:'#F1F5F9'}}>📸 Events Showcase</div>
+        <div style={{fontSize:11,color:'#4A6A8A'}}>{idx+1} / {count}</div>
+      </div>
+
+      {/* Slideshow */}
+      <div className="album-wrap"
+        onMouseEnter={()=>setPaused(true)}
+        onMouseLeave={()=>setPaused(false)}
+      >
+        {/* ── Image pane ── */}
+        <div className="album-img-pane">
+          {ev.image_url
+            ? <img key={idx} src={ev.image_url} alt={ev.short_name}/>
+            : <div key={idx} style={{
+                width:'100%', height:'100%',
+                display:'flex', flexDirection:'column',
+                alignItems:'center', justifyContent:'center', gap:10,
+                background:'#090F1C',
+                animation:'albumFade .35s ease',
+              }}>
+                <div style={{fontSize:42, filter:'grayscale(1)', opacity:.25}}>{/* camera */}📷</div>
+                <div style={{fontSize:12, color:'#3D5A7A', fontStyle:'italic'}}>No image available</div>
+              </div>
+          }
+
+          {/* Colour bar at bottom matching event colour */}
+          <div style={{
+            position:'absolute', bottom:0, left:0, right:0,
+            height:3, background:ev.color, opacity:.7,
+          }}/>
+
+          {count > 1 && <>
+            <button className="album-arrow" style={{left:8}}  onClick={prev}>‹</button>
+            <button className="album-arrow" style={{right:8}} onClick={next}>›</button>
+          </>}
+
+          {count > 1 && (
+            <div style={{position:'absolute',bottom:12,left:0,right:0,display:'flex',justifyContent:'center',gap:5}}>
+              {slides.map((_,i)=>(
+                <div key={i} className="album-dot"
+                  onClick={e=>{e.stopPropagation();setIdx(i);}}
+                  style={{
+                    background: i===idx ? '#818CF8' : 'rgba(255,255,255,.3)',
+                    width: i===idx ? 18 : 7,
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ── Description pane ── */}
+        <div className="album-desc-pane">
+          {/* Past badge */}
+          {isPast && (
+            <div style={{
+              display:'inline-flex', alignItems:'center', gap:5,
+              padding:'3px 10px', borderRadius:20, marginBottom:4,
+              background:'rgba(100,116,139,.2)', border:'1px solid rgba(100,116,139,.3)',
+              fontSize:10, fontWeight:700, color:'#94A3B8', letterSpacing:'.6px',
+              textTransform:'uppercase', alignSelf:'flex-start',
+            }}>Concluded</div>
+          )}
+
+          {/* Event name — keyed to idx so it fades in on each slide change */}
+          <div key={`n${idx}`} style={{
+            fontSize:17, fontWeight:800, color:'#F1F5F9', lineHeight:1.3,
+            animation:'albumFade .35s ease',
+          }}>
+            {ev.short_name}
+          </div>
+
+          {/* Date + time */}
+          <div key={`dt${idx}`} style={{
+            display:'flex', gap:6, flexWrap:'wrap',
+            animation:'albumFade .35s ease',
+          }}>
+            <span style={{
+              fontSize:11, color:ev.color, fontWeight:700,
+              background:`${ev.color}15`, borderRadius:8,
+              padding:'2px 8px', border:`1px solid ${ev.color}30`,
+            }}>📅 {dateStr}</span>
+            <span style={{
+              fontSize:11, color:'#5A7A9A', fontWeight:600,
+              background:'rgba(148,163,184,.08)', borderRadius:8,
+              padding:'2px 8px',
+            }}>⏰ {ev.time}</span>
+          </div>
+
+          {/* Description */}
+          {ev.description
+            ? <div key={`desc${idx}`} style={{
+                fontSize:13, color:'#6A8AAA', lineHeight:1.75,
+                animation:'albumFade .35s ease',
+                display:'-webkit-box', WebkitLineClamp:4, WebkitBoxOrient:'vertical',
+                overflow:'hidden',
+              }}>
+                {ev.description}
+              </div>
+            : <div style={{fontSize:13,color:'#2D4868',fontStyle:'italic'}}>No description</div>
+          }
+
+          {/* Click to open detail */}
+          <button onClick={()=>onEventClick(ev)} style={{
+            marginTop:'auto', paddingTop:8,
+            background:'none', border:'none', cursor:'pointer', padding:0,
+            fontSize:12, color:'#6366F1', fontWeight:700, textAlign:'left',
+            display:'flex', alignItems:'center', gap:5,
+          }}>View details →</button>
+
+          {/* Progress bar */}
+          {count > 1 && !paused && (
+            <div style={{marginTop:8}}>
+              <div style={{height:2, background:'rgba(148,163,184,.1)', borderRadius:2}}>
+                <div style={{
+                  height:'100%', borderRadius:2,
+                  background:'linear-gradient(90deg,#6366F1,#8B5CF6)',
+                  width:`${((idx+1)/count)*100}%`,
+                  transition:'width .5s ease',
+                }}/>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  EVENT DETAIL MODAL
+// ═══════════════════════════════════════════════════════════
+function EventDetailModal({ event: ev, onClose }) {
+  if (!ev) return null;
+  const d = new Date(ev.date+'T00:00:00');
+  return (
+    <div className="overlay" onClick={e=>{ if(e.target===e.currentTarget) onClose(); }}>
+      <div className="modal modal-detail" style={{width:'92%',maxWidth:520}}>
+        {ev.image_url && (
+          <div style={{height:200,overflow:'hidden',borderRadius:'22px 22px 0 0',background:'#090F1C'}}>
+            <img src={ev.image_url} alt={ev.short_name}
+              style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}/>
+          </div>
+        )}
+        <div style={{padding:'26px 28px 28px'}}>
+          <div style={{display:'flex',alignItems:'flex-start',gap:12,marginBottom:16}}>
+            <div style={{width:10,height:10,borderRadius:'50%',background:ev.color,flexShrink:0,marginTop:7}}/>
+            <div style={{fontSize:22,fontWeight:800,color:'#F1F5F9',lineHeight:1.2}}>{ev.short_name}</div>
+          </div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:16}}>
+            {[
+              {icon:'📅', text:`${MONTH_NAMES[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`},
+              {icon:'⏰', text:ev.time},
+              {icon:'🌍', text:ev.timezone},
+            ].map(({icon,text})=>(
+              <div key={text} style={{
+                padding:'5px 12px',borderRadius:20,
+                background:'rgba(99,102,241,.12)',border:'1px solid rgba(99,102,241,.22)',
+                fontSize:13,color:'#A0C0E0',display:'flex',alignItems:'center',gap:6,
+              }}>
+                <span>{icon}</span><span>{text}</span>
+              </div>
+            ))}
+          </div>
+          {ev.description && (
+            <div style={{
+              fontSize:14,color:'#8FA4BE',lineHeight:1.7,marginBottom:20,
+              padding:'14px 16px',background:'rgba(9,15,28,.5)',
+              borderRadius:10,borderLeft:`3px solid ${ev.color}`,
+            }}>
+              {ev.description}
+            </div>
+          )}
+          <div style={{display:'flex',gap:10}}>
+            {ev.link_url&&(
+              <a href={ev.link_url} target="_blank" rel="noopener noreferrer"
+                className="btn-link" style={{flex:1,textDecoration:'none'}}>
+                🌐 Visit Website
+              </a>
+            )}
+            <button className="btn btn-g" style={{flex:1}} onClick={onClose}>Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  EVENT CALENDAR
+// ═══════════════════════════════════════════════════════════
+function EventCalendar({ events, isAdmin, onAddEvent, onEventClick }) {
+  const today = new Date();
+  const [yr,  setYr]     = useState(today.getFullYear());
+  const [mo,  setMo]     = useState(today.getMonth());
+  const [selDay, setSel] = useState(null);
+  const [tip, setTip]    = useState(null);
+  const [evTab, setEvTab]= useState('upcoming');
+
+  const daysInMo       = new Date(yr,mo+1,0).getDate();
+  const startDay       = new Date(yr,mo,1).getDay();
+  const todayMidnight  = new Date(today.toDateString());
+
+  const dayMap = {};
+  events.forEach(ev=>{
+    const d=new Date(ev.date+'T00:00:00');
+    if (d.getFullYear()===yr&&d.getMonth()===mo) {
+      const day=d.getDate();
+      (dayMap[day]||(dayMap[day]=[])).push(ev);
+    }
+  });
+
+  const upcoming = [...events]
+    .filter(ev=>new Date(ev.date+'T00:00:00')>=todayMidnight)
+    .sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,8);
+
+  const pastEvents = [...events]
+    .filter(ev=>new Date(ev.date+'T00:00:00')<todayMidnight)
+    .sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,8);
+
+  const shownEvents = evTab==='upcoming' ? upcoming : pastEvents;
+  const selEvents   = selDay ? (dayMap[selDay]||[]) : [];
+
+  function prevMo() { if(mo===0){setYr(y=>y-1);setMo(11);}else setMo(m=>m-1); setSel(null); }
+  function nextMo() { if(mo===11){setYr(y=>y+1);setMo(0);}else setMo(m=>m+1); setSel(null); }
+
+  const cells=[];
+  for(let i=0;i<startDay;i++) cells.push(null);
+  for(let d=1;d<=daysInMo;d++) cells.push(d);
+
+  function handleDayEnter(e,day,dots) {
+    if(!dots.length) return;
+    const rect=e.currentTarget.getBoundingClientRect();
+    setTip({day,x:rect.right+6,y:rect.top});
+  }
+
+  return (
+    <div className="dash-right">
+      {/* Floating tooltip */}
+      {tip && dayMap[tip.day] && (
+        <div className="cal-tooltip" style={{
+          left:Math.min(tip.x,window.innerWidth-250), top:tip.y,
+        }}>
+          <div style={{fontSize:10,fontWeight:800,color:'#4A6A8A',letterSpacing:'1px',textTransform:'uppercase',marginBottom:6}}>
+            {MONTH_NAMES[mo]} {tip.day}
+          </div>
+          {dayMap[tip.day].map(ev=>(
+            <div key={ev.id} className="cal-tooltip-row">
+              <div className="cal-tooltip-dot" style={{background:ev.color}}/>
+              <div>
+                <div style={{fontWeight:700,color:'#E2E8F0'}}>{ev.short_name}</div>
+                <div style={{fontSize:10,color:'#5A7A9A'}}>{ev.time} · {ev.timezone}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Mini calendar */}
+      <div className="card" style={{overflow:'hidden'}}>
+        <div style={{
+          padding:'14px 18px',
+          background:'linear-gradient(135deg,rgba(99,102,241,.12),rgba(139,92,246,.06))',
+          borderBottom:'1px solid rgba(148,163,184,.08)',
+          display:'flex',alignItems:'center',justifyContent:'space-between',
+        }}>
+          <button onClick={prevMo} style={{width:30,height:30,borderRadius:8,border:'1px solid rgba(148,163,184,.15)',background:'transparent',color:'#8FA4BE',fontSize:18,cursor:'pointer',lineHeight:1}}>‹</button>
+          <div style={{textAlign:'center'}}>
+            <div style={{fontWeight:800,fontSize:14,color:'#F1F5F9'}}>{MONTH_NAMES[mo]} {yr}</div>
+            <div style={{fontSize:10,color:'#3D5A7A',letterSpacing:'.8px',textTransform:'uppercase'}}>Event Calendar</div>
+          </div>
+          <button onClick={nextMo} style={{width:30,height:30,borderRadius:8,border:'1px solid rgba(148,163,184,.15)',background:'transparent',color:'#8FA4BE',fontSize:18,cursor:'pointer',lineHeight:1}}>›</button>
+        </div>
+
+        <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',padding:'9px 10px 4px',gap:2}}>
+          {DAY_ABBR.map(d=>(
+            <div key={d} style={{textAlign:'center',fontSize:10,color:'#3D5A7A',fontWeight:700,padding:'3px 0'}}>{d}</div>
+          ))}
+        </div>
+
+        <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',padding:'3px 10px 12px',gap:3}}>
+          {cells.map((day,i)=>{
+            if (!day) return <div key={`e${i}`}/>;
+            const isToday=day===today.getDate()&&mo===today.getMonth()&&yr===today.getFullYear();
+            const isSel=day===selDay;
+            const dots=dayMap[day]||[];
+            const hasEv=dots.length>0;
+            const evColor=hasEv?dots[0].color:null;
+            return (
+              <div key={day} className="cal-d"
+                onClick={()=>setSel(isSel?null:day)}
+                onMouseEnter={e=>handleDayEnter(e,day,dots)}
+                onMouseLeave={()=>setTip(null)}
+                style={{
+                  background:isSel?'rgba(99,102,241,.32)':isToday?'rgba(99,102,241,.16)':hasEv?`${evColor}22`:'transparent',
+                  border:isSel?'2px solid rgba(99,102,241,.7)':isToday?'1px solid rgba(99,102,241,.5)':hasEv?`1px solid ${evColor}55`:'1px solid transparent',
+                  boxShadow:hasEv?`0 0 6px ${evColor}30`:'none',
+                }}
+              >
+                <div style={{fontSize:12,fontWeight:isToday||hasEv?700:400,color:isToday?'#818CF8':isSel?'#F1F5F9':hasEv?'#E2E8F0':'#8AACBB'}}>{day}</div>
+                {hasEv&&(
+                  <div style={{display:'flex',justifyContent:'center',gap:2,marginTop:2,flexWrap:'wrap'}}>
+                    {dots.slice(0,3).map((ev,i)=>(
+                      <div key={i} style={{width:5,height:5,borderRadius:'50%',background:ev.color,boxShadow:`0 0 4px ${ev.color}80`}}/>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {selDay && (
+          <div style={{borderTop:'1px solid rgba(148,163,184,.08)',padding:'12px 14px'}}>
+            <div style={{fontSize:11,fontWeight:700,color:'#4A6A8A',marginBottom:8,textTransform:'uppercase',letterSpacing:'.8px'}}>
+              {MONTH_NAMES[mo]} {selDay}
+            </div>
+            {selEvents.length===0
+              ? <div style={{fontSize:12,color:'#2D4868',fontStyle:'italic'}}>No events this day</div>
+              : selEvents.map(ev=>(
+                <div key={ev.id} onClick={()=>onEventClick(ev)} style={{
+                  padding:'8px 12px',borderRadius:9,cursor:'pointer',
+                  background:`${ev.color}14`,borderLeft:`3px solid ${ev.color}`,
+                  marginBottom:6,transition:'opacity .15s',
+                }}
+                  onMouseEnter={e=>e.currentTarget.style.opacity='.72'}
+                  onMouseLeave={e=>e.currentTarget.style.opacity='1'}
+                >
+                  <div style={{fontSize:13,fontWeight:700,color:'#F1F5F9'}}>{ev.short_name}</div>
+                  <div style={{fontSize:11,color:'#6A8AAA',marginTop:2}}>{ev.time} · {ev.timezone}</div>
+                </div>
+              ))
+            }
+          </div>
+        )}
+      </div>
+
+      {/* Events list (upcoming / past toggle) */}
+      <div className="card" style={{overflow:'hidden'}}>
+        <div style={{padding:'13px 18px 0',borderBottom:'1px solid rgba(148,163,184,.08)'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
+            <div style={{fontSize:13,fontWeight:700,color:'#F1F5F9'}}>📅 Events</div>
+            {isAdmin&&<button className="btn btn-p btn-sm" onClick={onAddEvent}>+ Add</button>}
+          </div>
+          <div style={{display:'flex',gap:6,marginBottom:12}}>
+            {['upcoming','past'].map(t=>(
+              <button key={t} onClick={()=>setEvTab(t)} style={{
+                padding:'4px 14px',borderRadius:20,fontSize:11,fontWeight:700,cursor:'pointer',
+                border:evTab===t?'none':'1px solid rgba(148,163,184,.18)',
+                background:evTab===t?(t==='upcoming'?'rgba(99,102,241,.7)':'rgba(100,116,139,.5)'):'transparent',
+                color:evTab===t?'#fff':'#6A8AAA',transition:'all .15s',
+              }}>
+                {t==='upcoming'?'⏳ Upcoming':'🗂 Past'}
+                <span style={{
+                  marginLeft:5,borderRadius:10,padding:'1px 6px',fontSize:10,fontWeight:800,
+                  background:evTab===t?'rgba(255,255,255,.22)':'rgba(148,163,184,.12)',
+                  color:evTab===t?'#fff':'#5A7A9A',
+                }}>
+                  {t==='upcoming'?upcoming.length:pastEvents.length}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{padding:'10px 14px'}}>
+          {shownEvents.length===0&&(
+            <div style={{padding:'24px',textAlign:'center',color:'#2D4868',fontSize:13}}>
+              {evTab==='upcoming'?'No upcoming events':'No past events'}
+            </div>
+          )}
+          {shownEvents.map(ev=>{
+            const d=new Date(ev.date+'T00:00:00');
+            const isPast=evTab==='past';
+            return (
+              <div key={ev.id} className="ev-card" onClick={()=>onEventClick(ev)} style={{opacity:isPast?.74:1}}>
+                <div style={{
+                  flexShrink:0,width:46,height:46,borderRadius:11,
+                  background:`${ev.color}18`,border:`1px solid ${ev.color}35`,
+                  display:'flex',flexDirection:'column',alignItems:'center',
+                  justifyContent:'center',color:ev.color,overflow:'hidden',
+                }}>
+                  {ev.image_url
+                    ? <img src={ev.image_url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                    : <>
+                        <div style={{fontSize:16,fontWeight:800,lineHeight:1}}>{d.getDate()}</div>
+                        <div style={{fontSize:9,textTransform:'uppercase',fontWeight:700,letterSpacing:'.5px'}}>
+                          {MONTH_NAMES[d.getMonth()].slice(0,3)}
+                        </div>
+                      </>
+                  }
+                </div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13,fontWeight:700,color:'#F1F5F9',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+                    {ev.short_name}
+                  </div>
+                  <div style={{fontSize:11,color:'#5A7A8A',marginTop:2}}>{ev.time} · {ev.timezone}</div>
+                  <div style={{fontSize:11,color:'#3D5A6A',marginTop:3,overflow:'hidden',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical'}}>
+                    {ev.description}
+                  </div>
+                  <div style={{display:'flex',gap:6,marginTop:4,flexWrap:'wrap',alignItems:'center'}}>
+                    {isPast&&<span style={{fontSize:9,fontWeight:800,letterSpacing:'.8px',textTransform:'uppercase',background:'rgba(100,116,139,.25)',color:'#94A3B8',borderRadius:6,padding:'2px 6px'}}>Concluded</span>}
+                    {ev.link_url&&<span style={{fontSize:10,color:'#0EA5E9',fontWeight:600}}>🔗 Link</span>}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  EVENT MODAL
+// ═══════════════════════════════════════════════════════════
+function EventModal({ editEvent, adminPass, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    short_name:  editEvent?.short_name||'',
+    description: editEvent?.description||'',
+    date:        editEvent?.date||'',
+    time:        editEvent?.time||'10:00',
+    timezone:    editEvent?.timezone||'Asia/Kolkata',
+    color:       editEvent?.color||'#6366F1',
+    link_url:    editEvent?.link_url||'',
+  });
+  const [file, setFile]       = useState(null);
+  const [preview, setPreview] = useState(editEvent?.image_url||null);
+  const [loading, setLoading] = useState(false);
+  const fileRef               = useRef();
+
+  function set(k,v) { setForm(f=>({...f,[k]:v})); }
+
+  function pickFile(e) {
+    const f=e.target.files[0]; if(!f) return; setFile(f);
+    const r=new FileReader(); r.onload=ev=>setPreview(ev.target.result); r.readAsDataURL(f);
+  }
+
+  async function submit() {
+    if (!form.short_name||!form.date) return alert('Name and date are required');
+    setLoading(true);
+    try {
+      const fd=new FormData();
+      Object.entries(form).forEach(([k,v])=>fd.append(k,v));
+      if (file) fd.append('image',file);
+      if (editEvent) { await adminUpload(`/api/events/${editEvent.id}`,'PUT',fd,adminPass); }
+      else           { await adminUpload('/api/events','POST',fd,adminPass); }
+      onSaved();
+    } catch(e) { alert('Error: '+e.message); }
+    finally { setLoading(false); }
+  }
+
+  return (
+    <div className="overlay" onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <div className="modal modal-lg" style={{maxWidth:560}}>
+        <div style={{fontSize:17,fontWeight:800,color:'#F1F5F9',marginBottom:20}}>
+          {editEvent?'Edit Event':'Add Event'}
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:14}}>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+            <div style={{gridColumn:'1/-1'}}>
+              <label className="fl">Event Name *</label>
+              <input className="fi" value={form.short_name} onChange={e=>set('short_name',e.target.value)} placeholder="Short event name"/>
+            </div>
+            <div>
+              <label className="fl">Date *</label>
+              <input className="fi" type="date" value={form.date} onChange={e=>set('date',e.target.value)}/>
+            </div>
+            <div>
+              <label className="fl">Time</label>
+              <input className="fi" type="time" value={form.time} onChange={e=>set('time',e.target.value)}/>
+            </div>
+            <div style={{gridColumn:'1/-1'}}>
+              <label className="fl">Timezone</label>
+              <select className="fi" value={form.timezone} onChange={e=>set('timezone',e.target.value)}>
+                {TIMEZONES.map(tz=><option key={tz}>{tz}</option>)}
+              </select>
+            </div>
+            <div style={{gridColumn:'1/-1'}}>
+              <label className="fl">Description</label>
+              <textarea className="fi" rows={3} value={form.description} onChange={e=>set('description',e.target.value)}
+                placeholder="Event details…" style={{resize:'vertical'}}/>
+            </div>
+            <div style={{gridColumn:'1/-1'}}>
+              <label className="fl">Website URL</label>
+              <input className="fi" type="url" value={form.link_url} onChange={e=>set('link_url',e.target.value)} placeholder="https://…"/>
+              <div style={{fontSize:11,color:'#3D5A7A',marginTop:4}}>Adds a "Visit Website" button in the event detail</div>
+            </div>
+          </div>
+          <div>
+            <label className="fl">Colour</label>
+            <div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:4}}>
+              {COLORS.map(c=>(
+                <div key={c.hex} className={`sw${form.color===c.hex?' sel':''}`}
+                  style={{background:c.hex}} onClick={()=>set('color',c.hex)} title={c.name}/>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="fl">Image (optional)</label>
+            <div className="upload-zone" onClick={()=>fileRef.current.click()}>
+              {preview ? <img src={preview} alt="" className="img-thumb"/>
+                : <div style={{color:'#3D5A7A',fontSize:13}}>📷 Click to upload</div>
+              }
+            </div>
+            <input type="file" ref={fileRef} className="file-btn" accept="image/*" onChange={pickFile}/>
+          </div>
+        </div>
+        <div style={{display:'flex',gap:10,marginTop:20}}>
+          <button className="btn btn-g" style={{flex:1}} onClick={onClose}>Cancel</button>
+          <button className="btn btn-p" style={{flex:1}} onClick={submit} disabled={loading}>
+            {loading?'Saving…':editEvent?'Save Changes':'Add Event'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  BOARD MODAL
+// ═══════════════════════════════════════════════════════════
+function BoardModal({ board, adminPass, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    name:board?.name||'', subtitle:board?.subtitle||'',
+    emoji:board?.emoji||'🏆', color:board?.color||'#6366F1', unit:board?.unit||'pts',
+  });
+  const [file, setFile]       = useState(null);
+  const [preview, setPreview] = useState(board?.image_url||null);
+  const [loading, setLoading] = useState(false);
+  const fileRef               = useRef();
+
+  function set(k,v) { setForm(f=>({...f,[k]:v})); }
+
+  function pickFile(e) {
+    const f=e.target.files[0]; if(!f) return; setFile(f);
+    const r=new FileReader(); r.onload=ev=>setPreview(ev.target.result); r.readAsDataURL(f);
+  }
+
+  async function submit() {
+    if (!form.name||!form.subtitle) return alert('Name and subtitle required');
+    setLoading(true);
+    try {
+      let b;
+      if (board) { b=await adminJson(`/api/leaderboards/${board.id}`,'PUT',form,adminPass); }
+      else       { b=await adminJson('/api/leaderboards','POST',form,adminPass); }
+      if (file) {
+        const fd=new FormData(); fd.append('image',file);
+        await adminUpload(`/api/leaderboards/${b.id}/image`,'POST',fd,adminPass);
+      }
+      onSaved();
+    } catch(e) { alert('Error: '+e.message); }
+    finally { setLoading(false); }
+  }
+
+  return (
+    <div className="overlay" onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <div className="modal modal-lg">
+        <div style={{fontSize:17,fontWeight:800,color:'#F1F5F9',marginBottom:20}}>
+          {board?'Edit Leaderboard':'New Leaderboard'}
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:14}}>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+            <div style={{gridColumn:'1/-1'}}>
+              <label className="fl">Board Name *</label>
+              <input className="fi" value={form.name} onChange={e=>set('name',e.target.value)} placeholder="e.g. Aaanyottam"/>
+            </div>
+            <div>
+              <label className="fl">Subtitle *</label>
+              <input className="fi" value={form.subtitle} onChange={e=>set('subtitle',e.target.value)} placeholder="e.g. Elephant Race"/>
+            </div>
+            <div>
+              <label className="fl">Score Unit</label>
+              <input className="fi" value={form.unit} onChange={e=>set('unit',e.target.value)} placeholder="pts / km / steps"/>
+            </div>
+          </div>
+          <div>
+            <label className="fl">Colour</label>
+            <div style={{display:'flex',gap:8,flexWrap:'wrap',marginTop:4}}>
+              {COLORS.map(c=>(
+                <div key={c.hex} className={`sw${form.color===c.hex?' sel':''}`}
+                  style={{background:c.hex}} onClick={()=>set('color',c.hex)} title={c.name}/>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="fl">Icon (emoji)</label>
+            <div style={{display:'flex',gap:6,flexWrap:'wrap',marginTop:4}}>
+              {EMOJIS.map(em=>(
+                <div key={em} className={`em${form.emoji===em?' sel':''}`} onClick={()=>set('emoji',em)}>{em}</div>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="fl">Image (optional — replaces emoji)</label>
+            <div className="upload-zone" onClick={()=>fileRef.current.click()}>
+              {preview ? <img src={preview} alt="" className="img-thumb"/>
+                : <div style={{color:'#3D5A7A',fontSize:13}}>📷 Click to upload</div>
+              }
+            </div>
+            <input type="file" ref={fileRef} className="file-btn" accept="image/*" onChange={pickFile}/>
+          </div>
+        </div>
+        <div style={{display:'flex',gap:10,marginTop:20}}>
+          <button className="btn btn-g" style={{flex:1}} onClick={onClose}>Cancel</button>
+          <button className="btn btn-p" style={{flex:1}} onClick={submit} disabled={loading}>
+            {loading?'Saving…':board?'Save Changes':'Create Board'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  PARTICIPANT MODAL
+// ═══════════════════════════════════════════════════════════
+function ParticipantModal({ board, participant, adminPass, onClose, onSaved }) {
+  const [name, setName]   = useState(participant?.name||'');
+  const [score, setScore] = useState(participant?.score!=null?String(participant.score):'0');
+  const [loading, setLoading] = useState(false);
+
+  async function submit() {
+    if (!name) return alert('Name required');
+    setLoading(true);
+    try {
+      if (participant) { await adminJson(`/api/participants/${participant.id}`,'PUT',{name,score:parseFloat(score)},adminPass); }
+      else             { await adminJson(`/api/leaderboards/${board.id}/participants`,'POST',{name,score:parseFloat(score)},adminPass); }
+      onSaved();
+    } catch(e) { alert('Error: '+e.message); }
+    finally { setLoading(false); }
+  }
+
+  return (
+    <div className="overlay" onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <div className="modal" style={{maxWidth:380}}>
+        <div style={{fontSize:16,fontWeight:800,color:'#F1F5F9',marginBottom:18}}>
+          {participant?'Edit Participant':'Add Participant'} — {board.name}
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:12}}>
+          <div>
+            <label className="fl">Name</label>
+            <input className="fi" value={name} onChange={e=>setName(e.target.value)} placeholder="Participant / team name"/>
+          </div>
+          <div>
+            <label className="fl">Score ({board.unit})</label>
+            <input className="fi" type="number" value={score} onChange={e=>setScore(e.target.value)} placeholder="0"/>
+          </div>
+        </div>
+        <div style={{display:'flex',gap:10,marginTop:18}}>
+          <button className="btn btn-g" style={{flex:1}} onClick={onClose}>Cancel</button>
+          <button className="btn btn-p" style={{flex:1}} onClick={submit} disabled={loading}>
+            {loading?'Saving…':participant?'Save':'Add'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ADMIN PANEL
+// ═══════════════════════════════════════════════════════════
+function AdminPanel({ boards, setBoards, events, setEvents, adminPass, toast }) {
+  const [sec, setSec]    = useState('boards');
+  const [editBoard, setEB] = useState(null);
+  const [editEvent, setEE] = useState(null);
+  const [showNewB, setSNB] = useState(false);
+  const [showNewE, setSNE] = useState(false);
+  const [editP, setEP]    = useState(null);
+  const [showAddP, setSAP] = useState(null);
+
+  async function reload() {
+    const [b,e]=await Promise.all([apiFetch('/api/leaderboards'),apiFetch('/api/events')]);
+    setBoards(b); setEvents(e);
+  }
+
+  async function deleteBoard(id) {
+    if (!confirm('Delete leaderboard and all participants?')) return;
+    try { await adminJson(`/api/leaderboards/${id}`,'DELETE',{},adminPass); await reload(); toast('Leaderboard deleted'); }
+    catch(e) { toast('Error: '+e.message); }
+  }
+  async function deleteEvent(id) {
+    if (!confirm('Delete this event?')) return;
+    try { await adminJson(`/api/events/${id}`,'DELETE',{},adminPass); await reload(); toast('Event deleted'); }
+    catch(e) { toast('Error: '+e.message); }
+  }
+  async function deleteParticipant(id) {
+    try { await adminJson(`/api/participants/${id}`,'DELETE',{},adminPass); await reload(); toast('Participant removed'); }
+    catch(e) { toast('Error: '+e.message); }
+  }
+
+  const SECS=[{id:'boards',label:'🏆 Leaderboards'},{id:'events',label:'📅 Events'}];
+
+  return (
+    <div style={{display:'flex',height:'calc(100vh - 64px)'}}>
+      <div style={{width:200,background:'rgba(16,29,48,.95)',borderRight:'1px solid rgba(148,163,184,.08)',padding:'20px 12px',flexShrink:0}}>
+        <div className="sec-lbl" style={{padding:'0 4px',marginBottom:14}}>Admin Panel</div>
+        {SECS.map(s=>(
+          <div key={s.id} className="sb-i" onClick={()=>setSec(s.id)} style={{
+            color:sec===s.id?'#818CF8':'#6A8AAA',
+            background:sec===s.id?'rgba(99,102,241,.15)':'transparent',
+            border:sec===s.id?'1px solid rgba(99,102,241,.25)':'1px solid transparent',
+            fontWeight:sec===s.id?700:400,fontSize:13,
+          }}>{s.label}</div>
+        ))}
+      </div>
+
+      <div style={{flex:1,overflow:'auto',padding:'24px'}}>
+        {sec==='boards' && (
+          <div style={{maxWidth:780}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+              <div style={{fontSize:18,fontWeight:800,color:'#F1F5F9'}}>Leaderboards</div>
+              <button className="btn btn-p btn-sm" onClick={()=>{setEB(null);setSNB(true);}}>+ New Board</button>
+            </div>
+            {boards.map(b=>(
+              <div key={b.id} className="card" style={{marginBottom:16,overflow:'hidden'}}>
+                <div style={{padding:'14px 18px',borderBottom:'1px solid rgba(148,163,184,.07)',display:'flex',alignItems:'center',gap:12}}>
+                  <BoardIcon board={b} size={42}/>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:15,fontWeight:700,color:'#F1F5F9'}}>{b.name}</div>
+                    <div style={{fontSize:12,color:b.color}}>{b.subtitle}</div>
+                  </div>
+                  <div style={{display:'flex',gap:8}}>
+                    <button className="btn btn-i btn-sm" onClick={()=>{setEB(b);setSNB(true);}}>Edit</button>
+                    <button className="btn btn-d btn-sm" onClick={()=>deleteBoard(b.id)}>Delete</button>
+                  </div>
+                </div>
+                <div style={{padding:'10px 18px 14px'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+                    <div className="sec-lbl" style={{marginBottom:0}}>Participants ({(b.participants||[]).length})</div>
+                    <button className="btn btn-i btn-sm" onClick={()=>setSAP(b)}>+ Add</button>
+                  </div>
+                  {(b.participants||[]).length===0
+                    ? <div style={{fontSize:12,color:'#3D5A7A',fontStyle:'italic'}}>No participants yet</div>
+                    : sortedP(b.participants).map((p,i)=>(
+                      <div key={p.id} style={{display:'flex',alignItems:'center',padding:'6px 0',borderBottom:'1px solid rgba(148,163,184,.05)'}}>
+                        <div style={{width:26,color:'#5A7A9A',fontSize:12,fontWeight:700}}>#{i+1}</div>
+                        <div style={{flex:1,fontSize:13,color:'#F1F5F9'}}>{p.name}</div>
+                        <div style={{fontSize:13,color:b.color,fontWeight:700,marginRight:12}}>{fmtScore(p.score,b.unit)}</div>
+                        <div style={{display:'flex',gap:6}}>
+                          <button className="btn btn-i btn-sm" onClick={()=>setEP({board:b,participant:p})}>Edit</button>
+                          <button className="btn btn-d btn-sm" onClick={()=>deleteParticipant(p.id)}>✕</button>
+                        </div>
+                      </div>
+                    ))
+                  }
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {sec==='events' && (
+          <div style={{maxWidth:780}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+              <div style={{fontSize:18,fontWeight:800,color:'#F1F5F9'}}>Events</div>
+              <button className="btn btn-p btn-sm" onClick={()=>{setEE(null);setSNE(true);}}>+ New Event</button>
+            </div>
+            {events.length===0&&<div style={{color:'#3D5A7A',fontSize:13}}>No events yet.</div>}
+            {[...events].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(ev=>(
+              <div key={ev.id} className="card" style={{marginBottom:12,padding:'14px 18px'}}>
+                <div style={{display:'flex',alignItems:'center',gap:12}}>
+                  <div style={{width:10,height:10,borderRadius:'50%',background:ev.color,flexShrink:0}}/>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:14,fontWeight:700,color:'#F1F5F9'}}>{ev.short_name}</div>
+                    <div style={{fontSize:12,color:'#5A7A9A'}}>{fmtDate(ev.date)} · {ev.time} · {ev.timezone}</div>
+                    {ev.link_url&&<div style={{fontSize:11,color:'#0EA5E9',marginTop:3}}>🔗 <a href={ev.link_url} target="_blank" rel="noopener noreferrer" style={{color:'#0EA5E9'}}>{ev.link_url}</a></div>}
+                  </div>
+                  <div style={{display:'flex',gap:8}}>
+                    <button className="btn btn-i btn-sm" onClick={()=>{setEE(ev);setSNE(true);}}>Edit</button>
+                    <button className="btn btn-d btn-sm" onClick={()=>deleteEvent(ev.id)}>Delete</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {showNewB&&<BoardModal board={editBoard} adminPass={adminPass} onClose={()=>{setSNB(false);setEB(null);}}
+        onSaved={async()=>{ await reload(); setSNB(false); setEB(null); toast(editBoard?'Board updated':'Board created'); }}/>}
+      {showNewE&&<EventModal editEvent={editEvent} adminPass={adminPass} onClose={()=>{setSNE(false);setEE(null);}}
+        onSaved={async()=>{ await reload(); setSNE(false); setEE(null); toast(editEvent?'Event updated':'Event created'); }}/>}
+      {showAddP&&<ParticipantModal board={showAddP} adminPass={adminPass} onClose={()=>setSAP(null)}
+        onSaved={async()=>{ await reload(); setSAP(null); toast('Participant added'); }}/>}
+      {editP&&<ParticipantModal board={editP.board} participant={editP.participant} adminPass={adminPass}
+        onClose={()=>setEP(null)}
+        onSaved={async()=>{ await reload(); setEP(null); toast('Participant updated'); }}/>}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LOGIN MODAL
+// ═══════════════════════════════════════════════════════════
+function LoginModal({ onClose, onSuccess }) {
+  const [pass, setPass]   = useState('');
+  const [err, setErr]     = useState('');
+  const [loading, setLoading] = useState(false);
+  const ref = useRef();
+  useEffect(()=>{ ref.current?.focus(); },[]);
+
+  async function tryLogin() {
+    if (!pass) return;
+    setLoading(true);
+    try {
+      await apiFetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pass})});
+      onSuccess(pass);
+    } catch(_) { setErr('Incorrect password. Please try again.'); }
+    finally { setLoading(false); }
+  }
+
+  return (
+    <div className="overlay">
+      <div className="modal" style={{maxWidth:380}}>
+        <div style={{textAlign:'center',marginBottom:24}}>
+          <div style={{
+            width:56,height:56,background:'linear-gradient(135deg,#6366F1,#8B5CF6)',
+            borderRadius:16,margin:'0 auto 14px',
+            display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,
+            boxShadow:'0 8px 25px rgba(99,102,241,.4)',
+          }}>🔐</div>
+          <div style={{fontSize:19,fontWeight:800,color:'#F1F5F9'}}>Admin Access</div>
+          <div style={{fontSize:13,color:'#3D5A7A',marginTop:4}}>Enter the admin password to continue</div>
+        </div>
+        <div style={{marginBottom:8}}>
+          <label className="fl">Password</label>
+          <input ref={ref} className="fi" type="password" value={pass}
+            onChange={e=>{setPass(e.target.value);setErr('');}}
+            onKeyDown={e=>e.key==='Enter'&&tryLogin()} placeholder="••••••••"/>
+          {err&&<div style={{color:'#F87171',fontSize:12,marginTop:6}}>{err}</div>}
+        </div>
+        <div style={{display:'flex',gap:10,marginTop:20}}>
+          <button className="btn btn-g" style={{flex:1}} onClick={onClose}>Cancel</button>
+          <button className="btn btn-p" style={{flex:1}} onClick={tryLogin} disabled={loading}>
+            {loading?'Checking…':'Login'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LOADING SCREEN
+// ═══════════════════════════════════════════════════════════
+function LoadingScreen() {
+  return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'calc(100vh - 64px)',flexDirection:'column',gap:16}}>
+      <div style={{
+        width:48,height:48,borderRadius:12,
+        background:'linear-gradient(135deg,#6366F1,#8B5CF6)',
+        display:'flex',alignItems:'center',justifyContent:'center',
+        fontSize:24,animation:'pulse 1.5s ease infinite',
+      }}>V</div>
+      <div style={{color:'#3D5A7A',fontSize:14}}>Loading V Board…</div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════════════
+function Dashboard({ boards, events, setEvents, isAdmin, adminPass, toast }) {
+  const [showAddEvt, setShowAddEvt] = useState(false);
+  const [detailEvt, setDetailEvt]   = useState(null);
+
+  return (
+    <div className="dash-pad" style={{padding:'22px 24px',maxWidth:1440,margin:'0 auto'}}>
+      {/* Banner */}
+      <div style={{
+        marginBottom:22,display:'flex',alignItems:'center',gap:16,flexWrap:'wrap',
+        padding:'14px 22px',
+        background:'linear-gradient(135deg,rgba(99,102,241,.12) 0%,rgba(139,92,246,.05) 100%)',
+        borderRadius:16,border:'1px solid rgba(99,102,241,.18)',
+      }}>
+        <div style={{fontSize:32}}>🏆</div>
+        <div>
+          <div style={{fontSize:19,fontWeight:800,color:'#F1F5F9'}}>Vadakkekkara Group Leaderboards</div>
+          <div style={{fontSize:12,color:'#4A6A8A',marginTop:2}}>
+            Live standings · Click events or hover calendar dates for details
+          </div>
+        </div>
+        {isAdmin&&(
+          <div style={{marginLeft:'auto',padding:'6px 14px',borderRadius:20,background:'rgba(34,197,94,.1)',border:'1px solid rgba(34,197,94,.3)',fontSize:12,fontWeight:700,color:'#4ADE80'}}>
+            ✓ Admin Mode
+          </div>
+        )}
+      </div>
+
+      {/* Main row */}
+      <div className="dash-row">
+        <div className="dash-left">
+          <LeaderboardSection boards={boards}/>
+          <EventSlideshow events={events} onEventClick={setDetailEvt}/>
+        </div>
+        <EventCalendar
+          events={events}
+          isAdmin={isAdmin}
+          onAddEvent={()=>setShowAddEvt(true)}
+          onEventClick={setDetailEvt}
+        />
+      </div>
+
+      {showAddEvt&&(
+        <EventModal adminPass={adminPass} onClose={()=>setShowAddEvt(false)}
+          onSaved={async()=>{ const e=await apiFetch('/api/events'); setEvents(e); setShowAddEvt(false); toast('Event created'); }}/>
+      )}
+      {detailEvt&&<EventDetailModal event={detailEvt} onClose={()=>setDetailEvt(null)}/>}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+//  APP ROOT
+// ═══════════════════════════════════════════════════════════
+function App() {
+  const [boards, setBoards]       = useState([]);
+  const [events, setEvents]       = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [isAdmin, setIsAdmin]     = useState(false);
+  const [adminPass, setAdminPass] = useState('');
+  const [view, setView]           = useState('dashboard');
+  const [showLogin, setShowLogin] = useState(false);
+  const [toastMsg, setToastMsg]   = useState('');
+
+  useEffect(()=>{ loadAll(); },[]);
+
+  async function loadAll() {
+    try {
+      const [b,e] = await Promise.all([
+        apiFetch('/api/leaderboards'),
+        apiFetch('/api/events'),
+      ]);
+      setBoards(b); setEvents(e);
+    } catch(err) { console.error('Failed to load:', err); }
+    finally { setLoading(false); }
+  }
+
+  function toast(msg) { setToastMsg(msg); setTimeout(()=>setToastMsg(''),3000); }
+  function handleLoginSuccess(pass) { setIsAdmin(true); setAdminPass(pass); setShowLogin(false); setView('admin'); }
+  function handleLogout()           { setIsAdmin(false); setAdminPass(''); setView('dashboard'); }
+
+  if (loading) return (
+    <>
+      <Header isAdmin={false} view="dashboard" onNav={()=>{}} onAdminClick={()=>{}} onLogout={()=>{}}/>
+      <LoadingScreen/>
+    </>
+  );
+
+  return (
+    <div>
+      <Header isAdmin={isAdmin} view={view} onNav={setView}
+        onAdminClick={()=>isAdmin?setView('admin'):setShowLogin(true)}
+        onLogout={handleLogout}/>
+      {view==='dashboard'
+        ? <Dashboard boards={boards} events={events} setEvents={setEvents}
+            isAdmin={isAdmin} adminPass={adminPass} toast={toast}/>
+        : <AdminPanel boards={boards} setBoards={setBoards} events={events} setEvents={setEvents}
+            adminPass={adminPass} toast={toast}/>
+      }
+      {showLogin&&<LoginModal onClose={()=>setShowLogin(false)} onSuccess={handleLoginSuccess}/>}
+      <Toast msg={toastMsg}/>
+    </div>
+  );
+}
+
+ReactDOM.render(<App/>, document.getElementById('root'));
+</script>
+</body>
+</html>

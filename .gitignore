@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# SQLite database (persisted via Railway volume, not in repo)
+vboard.db
+vboard.db-shm
+vboard.db-wal
+
+# Uploaded images (persisted via Railway volume, not in repo)
+uploads/
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
