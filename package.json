@@ -4,7 +4,7 @@
   "description": "V Board – Vadakkekkara Group Leaderboard Dashboard",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node --experimental-sqlite server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
