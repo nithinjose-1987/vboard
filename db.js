@@ -49,8 +49,9 @@ db.exec(`
     time        TEXT DEFAULT '10:00',
     timezone    TEXT DEFAULT 'Asia/Kolkata',
     color       TEXT DEFAULT '#6366F1',
-    image_url   TEXT,
-    link_url    TEXT DEFAULT '',
+    image_url      TEXT,
+    link_url       TEXT DEFAULT '',
+    attachment_url TEXT,
     created_at  INTEGER DEFAULT (unixepoch()),
     updated_at  INTEGER DEFAULT (unixepoch())
   );
@@ -68,6 +69,8 @@ db.exec(`
 // ── Migrations (safe to run on existing DB) ───────────────────
 // Add link_url if upgrading from an older schema
 try { db.exec("ALTER TABLE events ADD COLUMN link_url TEXT DEFAULT ''"); } catch (_) {}
+// Add attachment_url if upgrading from an older schema
+try { db.exec("ALTER TABLE events ADD COLUMN attachment_url TEXT"); } catch (_) {}
 // Add photos table if upgrading
 try { db.exec(`CREATE TABLE IF NOT EXISTS photos (id TEXT PRIMARY KEY, title TEXT NOT NULL DEFAULT '', description TEXT DEFAULT '', image_url TEXT, sort_ord INTEGER DEFAULT 0, created_at INTEGER DEFAULT (unixepoch()))`); } catch (_) {}
 // Fix old spelling of VallamKali

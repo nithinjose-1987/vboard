@@ -49,15 +49,23 @@ const storage = multer.diskStorage({
     cb(null, `img_${Date.now()}_${uid()}${ext}`);
   },
 });
-const ALLOWED_EXTS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg']);
+const ALLOWED_IMG_EXTS  = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg']);
+const ALLOWED_FILE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.pdf', '.doc', '.docx']);
 const upload = multer({
   storage,
-  limits: { fileSize: 8 * 1024 * 1024 }, // 8 MB
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB
   fileFilter: (_, file, cb) => {
-    const ok = ALLOWED_EXTS.has(path.extname(file.originalname).toLowerCase());
-    cb(ok ? null : new Error('Only image files are allowed'), ok);
+    const ext = path.extname(file.originalname).toLowerCase();
+    const ok = file.fieldname === 'attachment'
+      ? ALLOWED_FILE_EXTS.has(ext)
+      : ALLOWED_IMG_EXTS.has(ext);
+    cb(ok ? null : new Error('File type not allowed'), ok);
   },
 });
+const uploadEventFiles = upload.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'attachment', maxCount: 1 },
+]);
 
 // ── Auth helpers ──────────────────────────────────────────────
 function requireAdmin(req, res, next) {
@@ -160,35 +168,42 @@ app.get('/api/events', (_, res) => {
   res.json(db.prepare('SELECT * FROM events ORDER BY date, time').all());
 });
 
-app.post('/api/events', requireAdmin, upload.single('image'), (req, res) => {
+app.post('/api/events', requireAdmin, uploadEventFiles, (req, res) => {
   const { short_name, description, date, time, timezone, color, link_url } = req.body;
   if (!short_name || !date) return res.status(400).json({ error: 'short_name and date are required' });
   const id  = 'ev_' + uid();
-  const img = req.file ? `/uploads/${req.file.filename}` : null;
-  db.prepare(`INSERT INTO events (id,short_name,description,date,time,timezone,color,image_url,link_url)
-              VALUES (?,?,?,?,?,?,?,?,?)`)
+  const img = req.files?.image?.[0]  ? `/uploads/${req.files.image[0].filename}` : null;
+  const att = req.files?.attachment?.[0] ? `/uploads/${req.files.attachment[0].filename}` : null;
+  db.prepare(`INSERT INTO events (id,short_name,description,date,time,timezone,color,image_url,link_url,attachment_url)
+              VALUES (?,?,?,?,?,?,?,?,?,?)`)
     .run(id, short_name.trim(), description || '', date, time || '10:00',
-         timezone || 'Asia/Kolkata', color || '#6366F1', img, link_url || '');
+         timezone || 'Asia/Kolkata', color || '#6366F1', img, link_url || '', att);
   res.status(201).json(db.prepare('SELECT * FROM events WHERE id=?').get(id));
 });
 
-app.put('/api/events/:id', requireAdmin, upload.single('image'), (req, res) => {
+app.put('/api/events/:id', requireAdmin, uploadEventFiles, (req, res) => {
   const existing = db.prepare('SELECT * FROM events WHERE id=?').get(req.params.id);
   if (!existing) return res.status(404).json({ error: 'Event not found' });
   const { short_name, description, date, time, timezone, color, link_url } = req.body;
   let img = existing.image_url;
-  if (req.file) {
-    deleteFile(existing.image_url); // replace old image
-    img = `/uploads/${req.file.filename}`;
+  let att = existing.attachment_url;
+  if (req.files?.image?.[0]) {
+    deleteFile(existing.image_url);
+    img = `/uploads/${req.files.image[0].filename}`;
   }
-  db.prepare(`UPDATE events SET short_name=?,description=?,date=?,time=?,timezone=?,color=?,image_url=?,link_url=?,updated_at=unixepoch() WHERE id=?`)
-    .run(short_name.trim(), description || '', date, time, timezone, color, img, link_url || '', req.params.id);
+  if (req.files?.attachment?.[0]) {
+    deleteFile(existing.attachment_url);
+    att = `/uploads/${req.files.attachment[0].filename}`;
+  }
+  db.prepare(`UPDATE events SET short_name=?,description=?,date=?,time=?,timezone=?,color=?,image_url=?,link_url=?,attachment_url=?,updated_at=unixepoch() WHERE id=?`)
+    .run(short_name.trim(), description || '', date, time, timezone, color, img, link_url || '', att, req.params.id);
   res.json(db.prepare('SELECT * FROM events WHERE id=?').get(req.params.id));
 });
 
 app.delete('/api/events/:id', requireAdmin, (req, res) => {
-  const ev = db.prepare('SELECT image_url FROM events WHERE id=?').get(req.params.id);
+  const ev = db.prepare('SELECT image_url, attachment_url FROM events WHERE id=?').get(req.params.id);
   deleteFile(ev?.image_url);
+  deleteFile(ev?.attachment_url);
   db.prepare('DELETE FROM events WHERE id=?').run(req.params.id);
   res.json({ ok: true });
 });

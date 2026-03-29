@@ -727,6 +727,27 @@ function EventSlideshow({ events, onEventClick }) {
             : <div style={{fontSize:13,color:'#2D4868',fontStyle:'italic'}}>No description</div>
           }
 
+          {/* Attachment icon */}
+          {ev.attachment_url && (
+            <a key={`att${idx}`} href={ev.attachment_url} target="_blank" rel="noopener noreferrer"
+              title="Open attachment" style={{textDecoration:'none',animation:'albumFade .35s ease',alignSelf:'flex-start'}}>
+              <div style={{
+                width:48, height:56, borderRadius:8,
+                background:'rgba(220,38,38,.12)', border:'1px solid rgba(220,38,38,.3)',
+                display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+                gap:2, cursor:'pointer', transition:'transform .15s',
+              }}
+                onMouseEnter={e=>e.currentTarget.style.transform='scale(1.08)'}
+                onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}
+              >
+                <span style={{fontSize:22, lineHeight:1}}>📄</span>
+                <span style={{fontSize:8, fontWeight:800, color:'#EF4444', letterSpacing:'.5px',textTransform:'uppercase'}}>
+                  {ev.attachment_url.split('.').pop().toUpperCase()}
+                </span>
+              </div>
+            </a>
+          )}
+
           {/* Click to open detail */}
           <button onClick={()=>onEventClick(ev)} style={{
             marginTop:'auto', paddingTop:8,
@@ -796,6 +817,27 @@ function EventDetailModal({ event: ev, onClose }) {
               borderRadius:10,borderLeft:`3px solid ${ev.color}`,
             }}>
               {ev.description}
+            </div>
+          )}
+          {ev.attachment_url && (
+            <div style={{display:'flex', justifyContent:'center', marginBottom:16}}>
+              <a href={ev.attachment_url} target="_blank" rel="noopener noreferrer"
+                title="Open attachment" style={{textDecoration:'none'}}>
+                <div style={{
+                  width:64, height:76, borderRadius:10,
+                  background:'rgba(220,38,38,.12)', border:'1px solid rgba(220,38,38,.3)',
+                  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+                  gap:4, cursor:'pointer', transition:'transform .15s',
+                }}
+                  onMouseEnter={e=>e.currentTarget.style.transform='scale(1.08)'}
+                  onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}
+                >
+                  <span style={{fontSize:30, lineHeight:1}}>📄</span>
+                  <span style={{fontSize:9, fontWeight:800, color:'#EF4444', letterSpacing:'.8px', textTransform:'uppercase'}}>
+                    {ev.attachment_url.split('.').pop().toUpperCase()}
+                  </span>
+                </div>
+              </a>
             </div>
           )}
           <div style={{display:'flex',gap:10}}>
@@ -1006,15 +1048,12 @@ function EventCalendar({ events, isAdmin, onAddEvent, onEventClick }) {
                   display:'flex',flexDirection:'column',alignItems:'center',
                   justifyContent:'center',color:ev.color,overflow:'hidden',
                 }}>
-                  {ev.image_url
-                    ? <img src={ev.image_url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
-                    : <>
-                        <div style={{fontSize:16,fontWeight:800,lineHeight:1}}>{d.getDate()}</div>
-                        <div style={{fontSize:9,textTransform:'uppercase',fontWeight:700,letterSpacing:'.5px'}}>
-                          {MONTH_NAMES[d.getMonth()].slice(0,3)}
-                        </div>
-                      </>
-                  }
+                  <>
+                    <div style={{fontSize:16,fontWeight:800,lineHeight:1}}>{d.getDate()}</div>
+                    <div style={{fontSize:9,textTransform:'uppercase',fontWeight:700,letterSpacing:'.5px'}}>
+                      {MONTH_NAMES[d.getMonth()].slice(0,3)}
+                    </div>
+                  </>
                 </div>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontSize:13,fontWeight:700,color:'#F1F5F9',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
@@ -1051,16 +1090,26 @@ function EventModal({ editEvent, adminPass, onClose, onSaved }) {
     color:       editEvent?.color||'#6366F1',
     link_url:    editEvent?.link_url||'',
   });
-  const [file, setFile]       = useState(null);
-  const [preview, setPreview] = useState(editEvent?.image_url||null);
-  const [loading, setLoading] = useState(false);
-  const fileRef               = useRef();
+  const [file, setFile]           = useState(null);
+  const [preview, setPreview]     = useState(editEvent?.image_url||null);
+  const [attachFile, setAttachFile] = useState(null);
+  const [attachName, setAttachName] = useState(
+    editEvent?.attachment_url ? editEvent.attachment_url.split('/').pop() : null
+  );
+  const [loading, setLoading]     = useState(false);
+  const fileRef                   = useRef();
+  const attachRef                 = useRef();
 
   function set(k,v) { setForm(f=>({...f,[k]:v})); }
 
   function pickFile(e) {
     const f=e.target.files[0]; if(!f) return; setFile(f);
     const r=new FileReader(); r.onload=ev=>setPreview(ev.target.result); r.readAsDataURL(f);
+  }
+
+  function pickAttach(e) {
+    const f=e.target.files[0]; if(!f) return;
+    setAttachFile(f); setAttachName(f.name);
   }
 
   async function submit() {
@@ -1070,6 +1119,7 @@ function EventModal({ editEvent, adminPass, onClose, onSaved }) {
       const fd=new FormData();
       Object.entries(form).forEach(([k,v])=>fd.append(k,v));
       if (file) fd.append('image',file);
+      if (attachFile) fd.append('attachment',attachFile);
       if (editEvent) { await adminUpload(`/api/events/${editEvent.id}`,'PUT',fd,adminPass); }
       else           { await adminUpload('/api/events','POST',fd,adminPass); }
       onSaved();
@@ -1131,6 +1181,16 @@ function EventModal({ editEvent, adminPass, onClose, onSaved }) {
               }
             </div>
             <input type="file" ref={fileRef} className="file-btn" accept="image/*" onChange={pickFile}/>
+          </div>
+          <div>
+            <label className="fl">Attachment — PDF or Word (optional)</label>
+            <div className="upload-zone" onClick={()=>attachRef.current.click()} style={{padding:'12px 16px',justifyContent:'flex-start',gap:10}}>
+              <span style={{fontSize:20}}>{attachName ? '📎' : '📄'}</span>
+              <span style={{fontSize:13,color:attachName?'#A0C0E0':'#3D5A7A'}}>
+                {attachName || 'Click to upload PDF or Word file'}
+              </span>
+            </div>
+            <input type="file" ref={attachRef} className="file-btn" accept=".pdf,.doc,.docx" onChange={pickAttach}/>
           </div>
         </div>
         <div style={{display:'flex',gap:10,marginTop:20}}>
