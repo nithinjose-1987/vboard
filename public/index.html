@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>V Board – Vadakkekkara Group</title>
+  <title>JM Pooram – J Board</title>
   <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
   <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
@@ -296,10 +296,27 @@
       .album-img-pane { width: 100%; height: 220px; border-radius: 0; flex-shrink: 0; }
       .album-desc-pane { padding: 16px; }
       .hdr-sub       { display: none; }
+      /* Admin panel mobile: sidebar becomes top tab bar */
+      .admin-wrap    { flex-direction: column !important; height: auto !important; }
+      .admin-sidebar {
+        width: 100% !important; border-right: none !important;
+        border-bottom: 1px solid rgba(148,163,184,.08) !important;
+        padding: 10px 12px !important;
+        display: flex !important; flex-direction: row !important; gap: 8px !important;
+      }
+      .admin-sidebar .sec-lbl { display: none; }
+      .sb-i { flex: 1; justify-content: center; padding: 10px 8px !important; font-size: 12px !important; }
+      .admin-content { padding: 14px !important; }
+      .admin-card-actions { flex-direction: column !important; gap: 6px !important; }
+      .admin-card-actions button { width: 100%; }
+      .admin-row-actions { flex-direction: row; }
+      .participant-row { flex-wrap: wrap; gap: 6px !important; }
+      .participant-row .p-score { margin-right: 0 !important; }
     }
     @media (max-width: 480px) {
       .tab-btn .tab-lbl { display: none; }
       .dash-pad { padding: 10px !important; }
+      .modal { padding: 18px 14px !important; }
     }
   </style>
 </head>
@@ -419,8 +436,8 @@ function Header({ isAdmin, view, onNav, onAdminClick, onLogout }) {
           boxShadow:'0 4px 15px rgba(99,102,241,.35)',flexShrink:0,
         }}>V</div>
         <div>
-          <div style={{fontSize:20,fontWeight:800,color:'#F1F5F9',letterSpacing:'-.4px',lineHeight:1.1}}>V Board</div>
-          <div className="hdr-sub" style={{fontSize:10,color:'#3D5A7A',letterSpacing:'1.5px',textTransform:'uppercase'}}>Vadakkekkara Group</div>
+          <div style={{fontSize:20,fontWeight:800,color:'#F1F5F9',letterSpacing:'-.4px',lineHeight:1.1}}>JM Pooram</div>
+          <div className="hdr-sub" style={{fontSize:10,color:'#3D5A7A',letterSpacing:'1.5px',textTransform:'uppercase'}}>J Board</div>
         </div>
       </div>
       <div style={{display:'flex',gap:8,alignItems:'center'}}>
@@ -1380,8 +1397,8 @@ function AdminPanel({ boards, setBoards, events, setEvents, adminPass, toast }) 
   const SECS=[{id:'boards',label:'🏆 Leaderboards'},{id:'events',label:'📅 Events'}];
 
   return (
-    <div style={{display:'flex',height:'calc(100vh - 64px)'}}>
-      <div style={{width:200,background:'rgba(16,29,48,.95)',borderRight:'1px solid rgba(148,163,184,.08)',padding:'20px 12px',flexShrink:0}}>
+    <div className="admin-wrap" style={{display:'flex',height:'calc(100vh - 64px)'}}>
+      <div className="admin-sidebar" style={{width:200,background:'rgba(16,29,48,.95)',borderRight:'1px solid rgba(148,163,184,.08)',padding:'20px 12px',flexShrink:0}}>
         <div className="sec-lbl" style={{padding:'0 4px',marginBottom:14}}>Admin Panel</div>
         {SECS.map(s=>(
           <div key={s.id} className="sb-i" onClick={()=>setSec(s.id)} style={{
@@ -1393,7 +1410,7 @@ function AdminPanel({ boards, setBoards, events, setEvents, adminPass, toast }) 
         ))}
       </div>
 
-      <div style={{flex:1,overflow:'auto',padding:'24px'}}>
+      <div className="admin-content" style={{flex:1,overflow:'auto',padding:'24px'}}>
         {sec==='boards' && (
           <div style={{maxWidth:780}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
@@ -1408,7 +1425,7 @@ function AdminPanel({ boards, setBoards, events, setEvents, adminPass, toast }) 
                     <div style={{fontSize:15,fontWeight:700,color:'#F1F5F9'}}>{b.name}</div>
                     <div style={{fontSize:12,color:b.color}}>{b.subtitle}</div>
                   </div>
-                  <div style={{display:'flex',gap:8}}>
+                  <div className="admin-card-actions" style={{display:'flex',gap:8}}>
                     <button className="btn btn-i btn-sm" onClick={()=>{setEB(b);setSNB(true);}}>Edit</button>
                     <button className="btn btn-d btn-sm" onClick={()=>deleteBoard(b.id)}>Delete</button>
                   </div>
@@ -1421,11 +1438,11 @@ function AdminPanel({ boards, setBoards, events, setEvents, adminPass, toast }) 
                   {(b.participants||[]).length===0
                     ? <div style={{fontSize:12,color:'#3D5A7A',fontStyle:'italic'}}>No participants yet</div>
                     : sortedP(b.participants).map((p,i)=>(
-                      <div key={p.id} style={{display:'flex',alignItems:'center',padding:'6px 0',borderBottom:'1px solid rgba(148,163,184,.05)'}}>
-                        <div style={{width:26,color:'#5A7A9A',fontSize:12,fontWeight:700}}>#{i+1}</div>
-                        <div style={{flex:1,fontSize:13,color:'#F1F5F9'}}>{p.name}</div>
-                        <div style={{fontSize:13,color:b.color,fontWeight:700,marginRight:12}}>{fmtScore(p.score,b.unit)}</div>
-                        <div style={{display:'flex',gap:6}}>
+                      <div key={p.id} className="participant-row" style={{display:'flex',alignItems:'center',padding:'8px 0',borderBottom:'1px solid rgba(148,163,184,.05)',gap:8}}>
+                        <div style={{width:26,color:'#5A7A9A',fontSize:12,fontWeight:700,flexShrink:0}}>#{i+1}</div>
+                        <div style={{flex:1,fontSize:13,color:'#F1F5F9',minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</div>
+                        <div className="p-score" style={{fontSize:13,color:b.color,fontWeight:700,marginRight:8,flexShrink:0}}>{fmtScore(p.score,b.unit)}</div>
+                        <div className="admin-row-actions" style={{display:'flex',gap:6,flexShrink:0}}>
                           <button className="btn btn-i btn-sm" onClick={()=>setEP({board:b,participant:p})}>Edit</button>
                           <button className="btn btn-d btn-sm" onClick={()=>deleteParticipant(p.id)}>✕</button>
                         </div>
@@ -1454,7 +1471,7 @@ function AdminPanel({ boards, setBoards, events, setEvents, adminPass, toast }) 
                     <div style={{fontSize:12,color:'#5A7A9A'}}>{fmtDate(ev.date)} · {ev.time} · {ev.timezone}</div>
                     {ev.link_url&&<div style={{fontSize:11,color:'#0EA5E9',marginTop:3}}>🔗 <a href={ev.link_url} target="_blank" rel="noopener noreferrer" style={{color:'#0EA5E9'}}>{ev.link_url}</a></div>}
                   </div>
-                  <div style={{display:'flex',gap:8}}>
+                  <div className="admin-card-actions" style={{display:'flex',gap:8}}>
                     <button className="btn btn-i btn-sm" onClick={()=>{setEE(ev);setSNE(true);}}>Edit</button>
                     <button className="btn btn-d btn-sm" onClick={()=>deleteEvent(ev.id)}>Delete</button>
                   </div>
@@ -1541,7 +1558,7 @@ function LoadingScreen() {
         display:'flex',alignItems:'center',justifyContent:'center',
         fontSize:24,animation:'pulse 1.5s ease infinite',
       }}>V</div>
-      <div style={{color:'#3D5A7A',fontSize:14}}>Loading V Board…</div>
+      <div style={{color:'#3D5A7A',fontSize:14}}>Loading JM Pooram…</div>
     </div>
   );
 }
@@ -1564,7 +1581,7 @@ function Dashboard({ boards, events, setEvents, isAdmin, adminPass, toast }) {
       }}>
         <div style={{fontSize:32}}>🏆</div>
         <div>
-          <div style={{fontSize:19,fontWeight:800,color:'#F1F5F9'}}>Vadakkekkara Group Leaderboards</div>
+          <div style={{fontSize:19,fontWeight:800,color:'#F1F5F9'}}>Game - Progress Tracker</div>
           <div style={{fontSize:12,color:'#4A6A8A',marginTop:2}}>
             Live standings · Click events or hover calendar dates for details
           </div>
