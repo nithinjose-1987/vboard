@@ -244,6 +244,42 @@ app.delete('/api/photos/:id', requireAdmin, (req, res) => {
 });
 
 // ═════════════════════════════════════════════════════════════
+//  HIGHLIGHTS  (key highlights widget)
+// ═════════════════════════════════════════════════════════════
+app.get('/api/highlights', (_, res) => {
+  res.json(db.prepare('SELECT * FROM highlights ORDER BY sort_ord, created_at').all());
+});
+
+app.post('/api/highlights', requireAdmin, upload.single('image'), (req, res) => {
+  const { name, description, url } = req.body;
+  if (!name) return res.status(400).json({ error: 'name is required' });
+  const id  = 'hl_' + uid();
+  const img = req.file ? `/uploads/${req.file.filename}` : null;
+  const ord = (db.prepare('SELECT COALESCE(MAX(sort_ord),0) AS m FROM highlights').get().m) + 1;
+  db.prepare(`INSERT INTO highlights (id,name,description,url,image_url,sort_ord) VALUES (?,?,?,?,?,?)`)
+    .run(id, name.trim(), (description||'').trim(), url||'', img, ord);
+  res.status(201).json(db.prepare('SELECT * FROM highlights WHERE id=?').get(id));
+});
+
+app.put('/api/highlights/:id', requireAdmin, upload.single('image'), (req, res) => {
+  const existing = db.prepare('SELECT * FROM highlights WHERE id=?').get(req.params.id);
+  if (!existing) return res.status(404).json({ error: 'Not found' });
+  const { name, description, url } = req.body;
+  let img = existing.image_url;
+  if (req.file) { deleteFile(existing.image_url); img = `/uploads/${req.file.filename}`; }
+  db.prepare(`UPDATE highlights SET name=?,description=?,url=?,image_url=? WHERE id=?`)
+    .run((name||existing.name).trim(), (description!==undefined?description:existing.description||'').trim(), url||existing.url, img, req.params.id);
+  res.json(db.prepare('SELECT * FROM highlights WHERE id=?').get(req.params.id));
+});
+
+app.delete('/api/highlights/:id', requireAdmin, (req, res) => {
+  const hl = db.prepare('SELECT image_url FROM highlights WHERE id=?').get(req.params.id);
+  deleteFile(hl?.image_url);
+  db.prepare('DELETE FROM highlights WHERE id=?').run(req.params.id);
+  res.json({ ok: true });
+});
+
+// ═════════════════════════════════════════════════════════════
 //  SPA FALLBACK  –  serve index.html for any unmatched GET
 // ═════════════════════════════════════════════════════════════
 app.get('*', (_, res) => {

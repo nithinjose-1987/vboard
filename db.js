@@ -64,6 +64,16 @@ db.exec(`
     sort_ord    INTEGER DEFAULT 0,
     created_at  INTEGER DEFAULT (unixepoch())
   );
+
+  CREATE TABLE IF NOT EXISTS highlights (
+    id          TEXT PRIMARY KEY,
+    name        TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    url         TEXT NOT NULL DEFAULT '',
+    image_url   TEXT,
+    sort_ord    INTEGER DEFAULT 0,
+    created_at  INTEGER DEFAULT (unixepoch())
+  );
 `);
 
 // ── Migrations (safe to run on existing DB) ───────────────────
@@ -73,6 +83,9 @@ try { db.exec("ALTER TABLE events ADD COLUMN link_url TEXT DEFAULT ''"); } catch
 try { db.exec("ALTER TABLE events ADD COLUMN attachment_url TEXT"); } catch (_) {}
 // Add photos table if upgrading
 try { db.exec(`CREATE TABLE IF NOT EXISTS photos (id TEXT PRIMARY KEY, title TEXT NOT NULL DEFAULT '', description TEXT DEFAULT '', image_url TEXT, sort_ord INTEGER DEFAULT 0, created_at INTEGER DEFAULT (unixepoch()))`); } catch (_) {}
+// Add highlights table if upgrading
+try { db.exec(`CREATE TABLE IF NOT EXISTS highlights (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', url TEXT NOT NULL DEFAULT '', image_url TEXT, sort_ord INTEGER DEFAULT 0, created_at INTEGER DEFAULT (unixepoch()))`); } catch (_) {}
+try { db.exec(`ALTER TABLE highlights ADD COLUMN description TEXT NOT NULL DEFAULT ''`); } catch (_) {}
 // Fix old spelling of VallamKali
 db.exec("UPDATE leaderboards SET name='VallamKali' WHERE name='VallamKalim'");
 db.exec("UPDATE leaderboards SET subtitle='Kerala Boat Race' WHERE id='vallamkalim' OR id='vallamkali'");
